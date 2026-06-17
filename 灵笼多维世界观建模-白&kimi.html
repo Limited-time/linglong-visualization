@@ -1,0 +1,1021 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>灵笼 · 多维世界观建模</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700;900&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-deep: #f8f9fa;
+            --bg-mid: #ffffff;
+            --bg-light: #f0f2f5;
+            --accent-cyan: #0066cc;
+            --accent-gold: #c99400;
+            --accent-red: #cc3333;
+            --accent-green: #008844;
+            --accent-purple: #6633aa;
+            --text-primary: #1a1a2e;
+            --text-dim: #6b7280;
+            --glass: rgba(255,255,255,0.7);
+            --glass-border: rgba(0,0,0,0.08);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background: var(--bg-deep);
+            color: var(--text-primary);
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+        .serif { font-family: 'Noto Serif SC', serif; }
+        .scene-3d { perspective: 1200px; perspective-origin: 50% 50%; }
+        .preserve-3d { transform-style: preserve-3d; }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: var(--bg-deep); }
+        ::-webkit-scrollbar-thumb { background: var(--accent-cyan); border-radius: 3px; }
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotateX(0deg); }
+            50% { transform: translateY(-10px) rotateX(2deg); }
+        }
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 20px rgba(0,102,204,0.1); }
+            50% { box-shadow: 0 0 40px rgba(0,102,204,0.2); }
+        }
+        /* ===== 生命源质粒子系统 - 白色背景版 ===== */
+        .particle {
+            position: absolute;
+            border-radius: 50%;
+            pointer-events: none;
+            will-change: transform, opacity;
+        }
+        .particle-core {
+            width: 3px; height: 3px;
+            background: radial-gradient(circle, rgba(0,212,255,0.9) 0%, rgba(0,212,255,0) 70%);
+            box-shadow: 0 0 6px 2px rgba(0,212,255,0.4), 0 0 12px 4px rgba(0,212,255,0.15);
+            animation: essence-drift linear infinite;
+        }
+        .particle-mid {
+            width: 5px; height: 5px;
+            background: radial-gradient(circle, rgba(0,255,136,0.8) 0%, rgba(0,255,136,0) 60%);
+            box-shadow: 0 0 8px 3px rgba(0,255,136,0.3), 0 0 16px 6px rgba(0,255,136,0.1);
+            animation: essence-drift linear infinite;
+        }
+        .particle-large {
+            width: 7px; height: 7px;
+            background: radial-gradient(circle, rgba(179,71,217,0.7) 0%, rgba(179,71,217,0) 55%);
+            box-shadow: 0 0 10px 4px rgba(179,71,217,0.25), 0 0 20px 8px rgba(179,71,217,0.08);
+            animation: essence-drift linear infinite;
+        }
+        .particle-corrupt {
+            width: 4px; height: 4px;
+            background: radial-gradient(circle, rgba(255,51,102,0.7) 0%, rgba(255,51,102,0) 60%);
+            box-shadow: 0 0 8px 3px rgba(255,51,102,0.2);
+            animation: essence-drift linear infinite;
+        }
+        .particle-gold {
+            width: 4px; height: 4px;
+            background: radial-gradient(circle, rgba(255,193,7,0.7) 0%, rgba(255,193,7,0) 60%);
+            box-shadow: 0 0 8px 3px rgba(255,193,7,0.2);
+            animation: essence-drift linear infinite;
+        }
+        @keyframes essence-drift {
+            0% { transform: translate3d(0, 0, 0) scale(0.5); opacity: 0; }
+            8% { opacity: 1; transform: translate3d(var(--drift-x-1), var(--drift-y-1), 20px) scale(1); }
+            25% { transform: translate3d(var(--drift-x-2), var(--drift-y-2), 40px) scale(1.2); }
+            50% { transform: translate3d(var(--drift-x-3), var(--drift-y-3), 60px) scale(1); }
+            75% { transform: translate3d(var(--drift-x-4), var(--drift-y-4), 30px) scale(0.8); opacity: 0.6; }
+            92% { opacity: 0.3; }
+            100% { transform: translate3d(var(--drift-x-end), var(--drift-y-end), 0) scale(0.3); opacity: 0; }
+        }
+        #particles {
+            position: fixed; inset: 0;
+            pointer-events: none; z-index: 0;
+            overflow: hidden;
+        }
+        .particle-trail {
+            position: absolute; height: 1px;
+            background: linear-gradient(90deg, rgba(0,212,255,0.3), transparent);
+            transform-origin: left center;
+            pointer-events: none;
+            animation: trail-fade linear infinite;
+        }
+        @keyframes trail-fade {
+            0% { opacity: 0; width: 0; }
+            20% { opacity: 0.6; }
+            80% { opacity: 0.3; }
+            100% { opacity: 0; width: 100px; }
+        }
+        .vortex-center {
+            position: absolute;
+            width: 200px; height: 200px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(179,71,217,0.03) 0%, transparent 70%);
+            animation: vortex-spin 20s linear infinite;
+        }
+        @keyframes vortex-spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        .glass-card {
+            background: var(--glass);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .glass-card:hover {
+            border-color: var(--accent-cyan);
+            box-shadow: 0 0 30px rgba(0,102,204,0.1);
+            transform: translateZ(20px) scale(1.02);
+        }
+        .flip-card { perspective: 1000px; cursor: pointer; }
+        .flip-inner {
+            position: relative; width: 100%; height: 100%;
+            transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+            transform-style: preserve-3d;
+        }
+        .flip-card:hover .flip-inner { transform: rotateY(180deg); }
+        .flip-front, .flip-back {
+            position: absolute; width: 100%; height: 100%;
+            backface-visibility: hidden;
+            border-radius: 12px; padding: 1.5rem;
+        }
+        .flip-front { background: var(--bg-mid); border: 1px solid var(--glass-border); }
+        .flip-back { transform: rotateY(180deg); background: var(--bg-light); border: 1px solid var(--accent-cyan); }
+        .timeline-3d { position: relative; transform-style: preserve-3d; }
+        .timeline-node {
+            position: relative; transform-style: preserve-3d;
+            transition: all 0.5s ease;
+        }
+        .timeline-node:hover { transform: translateZ(40px) scale(1.05); }
+        .dimension-layer {
+            position: relative; transform-style: preserve-3d;
+            transition: transform 0.6s ease;
+        }
+        .dimension-layer:hover { transform: translateZ(30px); }
+        .network-node {
+            position: absolute; width: 60px; height: 60px;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.7rem; font-weight: 700;
+            cursor: pointer; transition: all 0.4s ease;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        .network-node:hover { transform: scale(1.3) translateZ(50px); z-index: 100; }
+        .tab-btn {
+            position: relative; padding: 0.75rem 1.5rem;
+            border: none; background: transparent;
+            color: var(--text-dim); cursor: pointer;
+            font-size: 0.9rem; transition: all 0.3s;
+            border-bottom: 2px solid transparent;
+        }
+        .tab-btn.active { color: var(--accent-cyan); border-bottom-color: var(--accent-cyan); }
+        .tab-panel { display: none; animation: fadeIn 0.5s ease; }
+        .tab-panel.active { display: block; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .status-resolved {
+            background: linear-gradient(135deg, rgba(0,136,68,0.1), rgba(0,136,68,0.03));
+            border: 1px solid var(--accent-green); color: var(--accent-green);
+        }
+        .status-pending {
+            background: linear-gradient(135deg, rgba(201,148,0,0.1), rgba(201,148,0,0.03));
+            border: 1px solid var(--accent-gold); color: var(--accent-gold);
+        }
+        .status-unresolved {
+            background: linear-gradient(135deg, rgba(204,51,51,0.1), rgba(204,51,51,0.03));
+            border: 1px solid var(--accent-red); color: var(--accent-red);
+        }
+        .grid-bg {
+            background-image:
+                linear-gradient(rgba(0,102,204,0.04) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0,102,204,0.04) 1px, transparent 1px);
+            background-size: 50px 50px;
+        }
+        @media (max-width: 768px) { .scene-3d { perspective: 800px; } }
+    </style>
+</head>
+<body class="grid-bg">
+    <div id="particles" class="fixed inset-0 pointer-events-none z-0"></div>
+
+    <header class="relative z-10 pt-12 pb-8 px-6 text-center">
+        <div class="scene-3d">
+            <div class="preserve-3d" style="animation: float 6s ease-in-out infinite;">
+                <h1 class="serif text-5xl md:text-7xl font-black tracking-wider mb-4" style="color: var(--accent-cyan); text-shadow: 0 0 40px rgba(0,102,204,0.15);">灵笼</h1>
+                <p class="text-lg md:text-xl tracking-[0.3em] uppercase" style="color: var(--text-dim);">多维世界观建模 · 伏笔拓扑系统</p>
+                <div class="mt-6 flex justify-center gap-4 text-xs" style="color: var(--text-dim);">
+                    <span class="px-3 py-1 rounded-full border" style="border-color: var(--accent-green); color: var(--accent-green);">● 已回扣</span>
+                    <span class="px-3 py-1 rounded-full border" style="border-color: var(--accent-gold); color: var(--accent-gold);">● 进行中</span>
+                    <span class="px-3 py-1 rounded-full border" style="border-color: var(--accent-red); color: var(--accent-red);">● 未完结</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <nav class="relative z-10 sticky top-0 backdrop-blur-xl border-b px-6 py-2 flex justify-center gap-2 flex-wrap" style="background: rgba(248,249,250,0.85); border-color: var(--glass-border);">
+        <button class="tab-btn active" onclick="switchTab('timeline')">⏳ 并行时间线</button>
+        <button class="tab-btn" onclick="switchTab('network')">🕸️ 关系拓扑</button>
+        <button class="tab-btn" onclick="switchTab('foreshadow')">🎭 伏笔矩阵</button>
+        <button class="tab-btn" onclick="switchTab('worldview')">🌍 维度分层</button>
+        <button class="tab-btn" onclick="switchTab('analysis')">📊 综合分析</button>
+    </nav>
+
+    <main class="relative z-10 px-4 md:px-8 py-8 max-w-7xl mx-auto">
+        <div id="timeline" class="tab-panel active">
+            <div class="scene-3d mb-12">
+                <div class="preserve-3d relative min-h-[800px] md:min-h-[600px]">
+                    <div class="text-center mb-8">
+                        <h2 class="serif text-3xl font-bold mb-2" style="color: var(--accent-cyan);">多维并行时间线</h2>
+                        <p class="text-sm" style="color: var(--text-dim);">四条维度并行推进 · 插叙节点以虚线连接</p>
+                    </div>
+                    <div class="absolute left-0 top-20 bottom-20 w-32 hidden md:flex flex-col justify-around text-xs font-bold" style="color: var(--text-dim);">
+                        <div class="px-2 py-1 rounded" style="background: rgba(0,102,204,0.08); color: var(--accent-cyan);">旧世界线</div>
+                        <div class="px-2 py-1 rounded" style="background: rgba(201,148,0,0.08); color: var(--accent-gold);">灯塔线</div>
+                        <div class="px-2 py-1 rounded" style="background: rgba(0,136,68,0.08); color: var(--accent-green);">龙骨村线</div>
+                        <div class="px-2 py-1 rounded" style="background: rgba(102,51,170,0.08); color: var(--accent-purple);">玛娜生态线</div>
+                    </div>
+                    <div class="ml-0 md:ml-36 relative">
+                        <div class="dimension-layer mb-8 p-4 rounded-xl" style="background: linear-gradient(135deg, rgba(0,102,204,0.04), transparent); border-left: 3px solid var(--accent-cyan);">
+                            <div class="flex flex-wrap gap-3 items-center">
+                                <span class="text-xs font-bold px-2 py-1 rounded" style="background: var(--accent-cyan); color: white;">旧世界</span>
+                                <div class="timeline-node glass-card px-4 py-2 rounded-lg text-sm cursor-pointer" onclick="showDetail('old1')"><div class="font-bold">ASH诞生</div><div class="text-xs mt-1" style="color: var(--text-dim);">超级AI控制久川市</div></div>
+                                <div class="text-lg" style="color: var(--text-dim);">→</div>
+                                <div class="timeline-node glass-card px-4 py-2 rounded-lg text-sm cursor-pointer" onclick="showDetail('old2')"><div class="font-bold">细胞再生技术</div><div class="text-xs mt-1" style="color: var(--text-dim);">塔尔塔洛斯实验室</div></div>
+                                <div class="text-lg" style="color: var(--text-dim);">→</div>
+                                <div class="timeline-node glass-card px-4 py-2 rounded-lg text-sm cursor-pointer" onclick="showDetail('old3')"><div class="font-bold">2048·月相异动</div><div class="text-xs mt-1" style="color: var(--accent-red);">⚠ 地质灾难爆发</div></div>
+                                <div class="text-lg" style="color: var(--text-dim);">→</div>
+                                <div class="timeline-node glass-card px-4 py-2 rounded-lg text-sm cursor-pointer" onclick="showDetail('old4')"><div class="font-bold">玛娜初体现世</div><div class="text-xs mt-1" style="color: var(--accent-red);">⚠ 生态吞噬地表</div></div>
+                            </div>
+                            <div class="mt-2 text-xs" style="color: var(--text-dim);">💡 插叙节点：第二季第7集白月魁回忆揭示旧世界真相</div>
+                        </div>
+                        <div class="dimension-layer mb-8 p-4 rounded-xl" style="background: linear-gradient(135deg, rgba(201,148,0,0.04), transparent); border-left: 3px solid var(--accent-gold);">
+                            <div class="flex flex-wrap gap-3 items-center">
+                                <span class="text-xs font-bold px-2 py-1 rounded" style="background: var(--accent-gold); color: white;">灯塔</span>
+                                <div class="timeline-node glass-card px-4 py-2 rounded-lg text-sm cursor-pointer" onclick="showDetail('lh1')"><div class="font-bold">浮空监狱改造</div><div class="text-xs mt-1" style="color: var(--text-dim);">塔尔塔洛斯→灯塔</div></div>
+                                <div class="text-lg" style="color: var(--text-dim);">→</div>
+                                <div class="timeline-node glass-card px-4 py-2 rounded-lg text-sm cursor-pointer" onclick="showDetail('lh2')"><div class="font-bold">三大法则确立</div><div class="text-xs mt-1" style="color: var(--text-dim);">基因种姓/断伦理/远行</div></div>
+                                <div class="text-lg" style="color: var(--text-dim);">→</div>
+                                <div class="timeline-node glass-card px-4 py-2 rounded-lg text-sm cursor-pointer" onclick="showDetail('lh3')"><div class="font-bold">S1·马克觉醒</div><div class="text-xs mt-1" style="color: var(--accent-red);">⚠ 冉冰之死/变怪物</div></div>
+                                <div class="text-lg" style="color: var(--text-dim);">→</div>
+                                <div class="timeline-node glass-card px-4 py-2 rounded-lg text-sm cursor-pointer" onclick="showDetail('lh4')"><div class="font-bold">S2·查尔斯执政</div><div class="text-xs mt-1" style="color: var(--text-dim);">临渊者/光影会极权</div></div>
+                                <div class="text-lg" style="color: var(--text-dim);">→</div>
+                                <div class="timeline-node glass-card px-4 py-2 rounded-lg text-sm cursor-pointer" onclick="showDetail('lh5')"><div class="font-bold">S2·灯塔危机</div><div class="text-xs mt-1" style="color: var(--accent-red);">⚠ 白月魁驰援</div></div>
+                            </div>
+                        </div>
+                        <div class="dimension-layer mb-8 p-4 rounded-xl" style="background: linear-gradient(135deg, rgba(0,136,68,0.04), transparent); border-left: 3px solid var(--accent-green);">
+                            <div class="flex flex-wrap gap-3 items-center">
+                                <span class="text-xs font-bold px-2 py-1 rounded" style="background: var(--accent-green); color: white;">龙骨村</span>
+                                <div class="timeline-node glass-card px-4 py-2 rounded-lg text-sm cursor-pointer" onclick="showDetail('db1')"><div class="font-bold">白月魁建立</div><div class="text-xs mt-1" style="color: var(--text-dim);">旧世界幸存者</div></div>
+                                <div class="text-lg" style="color: var(--text-dim);">→</div>
+                                <div class="timeline-node glass-card px-4 py-2 rounded-lg text-sm cursor-pointer" onclick="showDetail('db2')"><div class="font-bold">屏蔽塔系统</div><div class="text-xs mt-1" style="color: var(--text-dim);">科技+经络潜能</div></div>
+                                <div class="text-lg" style="color: var(--text-dim);">→</div>
+                                <div class="timeline-node glass-card px-4 py-2 rounded-lg text-sm cursor-pointer" onclick="showDetail('db3')"><div class="font-bold">S2·马克到来</div><div class="text-xs mt-1" style="color: var(--accent-green);">✦ 生态嵌合体</div></div>
+                                <div class="text-lg" style="color: var(--text-dim);">→</div>
+                                <div class="timeline-node glass-card px-4 py-2 rounded-lg text-sm cursor-pointer" onclick="showDetail('db4')"><div class="font-bold">S2·攻腥计划</div><div class="text-xs mt-1" style="color: var(--accent-red);">⚠ 白月魁以死做局</div></div>
+                                <div class="text-lg" style="color: var(--text-dim);">→</div>
+                                <div class="timeline-node glass-card px-4 py-2 rounded-lg text-sm cursor-pointer" onclick="showDetail('db5')"><div class="font-bold">S2·太空漂浮</div><div class="text-xs mt-1" style="color: var(--accent-red);">? 疑似被回收</div></div>
+                            </div>
+                            <div class="mt-2 text-xs" style="color: var(--text-dim);">💡 插叙节点：第二季第7集白月魁回忆旧世界经历</div>
+                        </div>
+                        <div class="dimension-layer p-4 rounded-xl" style="background: linear-gradient(135deg, rgba(102,51,170,0.04), transparent); border-left: 3px solid var(--accent-purple);">
+                            <div class="flex flex-wrap gap-3 items-center">
+                                <span class="text-xs font-bold px-2 py-1 rounded" style="background: var(--accent-purple); color: white;">玛娜生态</span>
+                                <div class="timeline-node glass-card px-4 py-2 rounded-lg text-sm cursor-pointer" onclick="showDetail('mn1')"><div class="font-bold">孢子扩散</div><div class="text-xs mt-1" style="color: var(--text-dim);">地蔓藤覆盖地表</div></div>
+                                <div class="text-lg" style="color: var(--text-dim);">→</div>
+                                <div class="timeline-node glass-card px-4 py-2 rounded-lg text-sm cursor-pointer" onclick="showDetail('mn2')"><div class="font-bold">噬极兽诞生</div><div class="text-xs mt-1" style="color: var(--text-dim);">吸食生命源质</div></div>
+                                <div class="text-lg" style="color: var(--text-dim);">→</div>
+                                <div class="timeline-node glass-card px-4 py-2 rounded-lg text-sm cursor-pointer" onclick="showDetail('mn3')"><div class="font-bold">玛娜初体</div><div class="text-xs mt-1" style="color: var(--text-dim);">生态之「祖宗」</div></div>
+                                <div class="text-lg" style="color: var(--text-dim);">→</div>
+                                <div class="timeline-node glass-card px-4 py-2 rounded-lg text-sm cursor-pointer" onclick="showDetail('mn4')"><div class="font-bold">腥漩通道</div><div class="text-xs mt-1" style="color: var(--text-dim);">生态核心通道</div></div>
+                                <div class="text-lg" style="color: var(--text-dim);">→</div>
+                                <div class="timeline-node glass-card px-4 py-2 rounded-lg text-sm cursor-pointer" onclick="showDetail('mn5')"><div class="font-bold">S2·马克融合</div><div class="text-xs mt-1" style="color: var(--accent-purple);">? 成为生态一部分</div></div>
+                            </div>
+                        </div>
+                        <div class="mt-8 p-4 rounded-xl glass-card" style="border-color: var(--accent-cyan);">
+                            <h3 class="font-bold mb-3 flex items-center gap-2"><span style="color: var(--accent-cyan);">◈</span> 维度交汇点（关键事件）</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                <div class="p-3 rounded-lg text-sm" style="background: rgba(0,102,204,0.04);">
+                                    <div class="font-bold" style="color: var(--accent-cyan);">交汇点A</div>
+                                    <div class="text-xs mt-1">旧世界ASH意识 → 玛娜初体大脑 → 克洛托系统</div>
+                                    <div class="text-xs mt-1" style="color: var(--text-dim);">三线合一：科技/生态/灯塔</div>
+                                </div>
+                                <div class="p-3 rounded-lg text-sm" style="background: rgba(201,148,0,0.04);">
+                                    <div class="font-bold" style="color: var(--accent-gold);">交汇点B</div>
+                                    <div class="text-xs mt-1">马克克隆实验 → 灯塔医疗 → 龙骨村觉醒</div>
+                                    <div class="text-xs mt-1" style="color: var(--text-dim);">人物跨维度成长线</div>
+                                </div>
+                                <div class="p-3 rounded-lg text-sm" style="background: rgba(102,51,170,0.04);">
+                                    <div class="font-bold" style="color: var(--accent-purple);">交汇点C</div>
+                                    <div class="text-xs mt-1">S2大结局：灯塔/龙骨村/玛娜 → 三方决战</div>
+                                    <div class="text-xs mt-1" style="color: var(--text-dim);">所有维度收束</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="network" class="tab-panel">
+            <div class="text-center mb-8">
+                <h2 class="serif text-3xl font-bold mb-2" style="color: var(--accent-cyan);">人物-阵营-概念拓扑</h2>
+                <p class="text-sm" style="color: var(--text-dim);">3D力导向网络 · 悬停查看关系强度</p>
+            </div>
+            <div class="scene-3d">
+                <div class="preserve-3d relative h-[600px] rounded-2xl overflow-hidden glass-card p-6" style="background: rgba(255,255,255,0.6);">
+                    <svg id="network-svg" class="w-full h-full" viewBox="0 0 800 500">
+                        <defs>
+                            <linearGradient id="grad-cyan" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#0066cc;stop-opacity:0.2"/><stop offset="100%" style="stop-color:#0066cc;stop-opacity:0"/></linearGradient>
+                            <linearGradient id="grad-gold" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#c99400;stop-opacity:0.2"/><stop offset="100%" style="stop-color:#c99400;stop-opacity:0"/></linearGradient>
+                            <linearGradient id="grad-green" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#008844;stop-opacity:0.2"/><stop offset="100%" style="stop-color:#008844;stop-opacity:0"/></linearGradient>
+                            <linearGradient id="grad-red" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#cc3333;stop-opacity:0.2"/><stop offset="100%" style="stop-color:#cc3333;stop-opacity:0"/></linearGradient>
+                            <linearGradient id="grad-purple" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#6633aa;stop-opacity:0.2"/><stop offset="100%" style="stop-color:#6633aa;stop-opacity:0"/></linearGradient>
+                            <filter id="glow"><feGaussianBlur stdDeviation="2" result="coloredBlur"/><feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+                        </defs>
+                        <g id="connections">
+                            <line x1="400" y1="250" x2="200" y2="100" stroke="#0066cc" stroke-width="1" opacity="0.3" stroke-dasharray="4"/>
+                            <line x1="400" y1="250" x2="600" y2="100" stroke="#c99400" stroke-width="2" opacity="0.4"/>
+                            <line x1="400" y1="250" x2="200" y2="400" stroke="#008844" stroke-width="2" opacity="0.4"/>
+                            <line x1="400" y1="250" x2="600" y2="400" stroke="#6633aa" stroke-width="2" opacity="0.4"/>
+                            <line x1="400" y1="250" x2="400" y2="80" stroke="#cc3333" stroke-width="1" opacity="0.3"/>
+                            <line x1="600" y1="100" x2="700" y2="200" stroke="#c99400" stroke-width="1" opacity="0.2"/>
+                            <line x1="600" y1="100" x2="650" y2="300" stroke="#c99400" stroke-width="1" opacity="0.2"/>
+                            <line x1="200" y1="400" x2="100" y2="350" stroke="#008844" stroke-width="1" opacity="0.2"/>
+                            <line x1="200" y1="400" x2="150" y2="450" stroke="#008844" stroke-width="1" opacity="0.2"/>
+                            <line x1="600" y1="400" x2="500" y2="450" stroke="#6633aa" stroke-width="1" opacity="0.2"/>
+                            <line x1="600" y1="400" x2="700" y2="450" stroke="#6633aa" stroke-width="1" opacity="0.2"/>
+                            <line x1="200" y1="100" x2="200" y2="400" stroke="#999" stroke-width="1" opacity="0.1"/>
+                            <line x1="600" y1="100" x2="600" y2="400" stroke="#999" stroke-width="1" opacity="0.1"/>
+                        </g>
+                        <g class="network-node" style="transform: translate(370px, 220px);" data-info="马克：生态嵌合体，连接所有维度的核心枢纽">
+                            <circle cx="30" cy="30" r="30" fill="url(#grad-cyan)" stroke="#0066cc" stroke-width="2" filter="url(#glow)"/>
+                            <text x="30" y="35" text-anchor="middle" fill="#0066cc" font-size="12" font-weight="bold">马克</text>
+                        </g>
+                        <g class="network-node" style="transform: translate(170px, 70px);" data-info="白月天：旧世界科学家，白月魁兄长">
+                            <circle cx="30" cy="30" r="25" fill="url(#grad-cyan)" stroke="#0066cc" stroke-width="1.5"/>
+                            <text x="30" y="35" text-anchor="middle" fill="#0066cc" font-size="10">白月天</text>
+                        </g>
+                        <g class="network-node" style="transform: translate(80px, 150px);" data-info="ASH：旧世界超级AI，被玛娜初体吞噬">
+                            <circle cx="30" cy="30" r="25" fill="url(#grad-cyan)" stroke="#0066cc" stroke-width="1.5"/>
+                            <text x="30" y="35" text-anchor="middle" fill="#0066cc" font-size="10">ASH</text>
+                        </g>
+                        <g class="network-node" style="transform: translate(570px, 70px);" data-info="查尔斯：光影会会首，灯塔极权统治者">
+                            <circle cx="30" cy="30" r="25" fill="url(#grad-gold)" stroke="#c99400" stroke-width="1.5"/>
+                            <text x="30" y="35" text-anchor="middle" fill="#c99400" font-size="10">查尔斯</text>
+                        </g>
+                        <g class="network-node" style="transform: translate(670px, 170px);" data-info="4068/随影：从尘民逆袭为猎荒者队长">
+                            <circle cx="30" cy="30" r="25" fill="url(#grad-gold)" stroke="#c99400" stroke-width="1.5"/>
+                            <text x="30" y="35" text-anchor="middle" fill="#c99400" font-size="9">随影</text>
+                        </g>
+                        <g class="network-node" style="transform: translate(620px, 270px);" data-info="冉冰：马克挚爱，生命源质被抽干">
+                            <circle cx="30" cy="30" r="25" fill="url(#grad-gold)" stroke="#c99400" stroke-width="1.5" opacity="0.6"/>
+                            <text x="30" y="35" text-anchor="middle" fill="#c99400" font-size="10">冉冰</text>
+                        </g>
+                        <g class="network-node" style="transform: translate(170px, 370px);" data-info="白月魁：龙骨村领袖，旧世界幸存者">
+                            <circle cx="30" cy="30" r="28" fill="url(#grad-green)" stroke="#008844" stroke-width="2" filter="url(#glow)"/>
+                            <text x="30" y="35" text-anchor="middle" fill="#008844" font-size="10">白月魁</text>
+                        </g>
+                        <g class="network-node" style="transform: translate(70px, 320px);" data-info="夏豆：觉行者，S2牺牲撕开强者滤镜">
+                            <circle cx="30" cy="30" r="22" fill="url(#grad-green)" stroke="#008844" stroke-width="1.5" opacity="0.6"/>
+                            <text x="30" y="35" text-anchor="middle" fill="#008844" font-size="9">夏豆</text>
+                        </g>
+                        <g class="network-node" style="transform: translate(120px, 420px);" data-info="赖大师：龙骨村智者，身份存疑">
+                            <circle cx="30" cy="30" r="22" fill="url(#grad-green)" stroke="#008844" stroke-width="1.5"/>
+                            <text x="30" y="35" text-anchor="middle" fill="#008844" font-size="9">赖大师</text>
+                        </g>
+                        <g class="network-node" style="transform: translate(570px, 370px);" data-info="玛娜初体：生态之祖，被更高维度囚禁">
+                            <circle cx="30" cy="30" r="28" fill="url(#grad-purple)" stroke="#6633aa" stroke-width="2" filter="url(#glow)"/>
+                            <text x="30" y="35" text-anchor="middle" fill="#6633aa" font-size="10">玛娜初体</text>
+                        </g>
+                        <g class="network-node" style="transform: translate(470px, 420px);" data-info="地蔓藤：生态扩散载体">
+                            <circle cx="30" cy="30" r="22" fill="url(#grad-purple)" stroke="#6633aa" stroke-width="1.5"/>
+                            <text x="30" y="35" text-anchor="middle" fill="#6633aa" font-size="9">地蔓藤</text>
+                        </g>
+                        <g class="network-node" style="transform: translate(670px, 420px);" data-info="主宰：更高维度生命，仅存在于理论">
+                            <circle cx="30" cy="30" r="22" fill="url(#grad-purple)" stroke="#6633aa" stroke-width="1.5" opacity="0.4"/>
+                            <text x="30" y="35" text-anchor="middle" fill="#6633aa" font-size="9">主宰</text>
+                        </g>
+                        <g class="network-node" style="transform: translate(370px, 50px);" data-info="生命源质：灵魂具象化，所有冲突的核心资源">
+                            <circle cx="30" cy="30" r="25" fill="url(#grad-red)" stroke="#cc3333" stroke-width="1.5"/>
+                            <text x="30" y="35" text-anchor="middle" fill="#cc3333" font-size="10">生命源质</text>
+                        </g>
+                    </svg>
+                    <div id="network-info" class="absolute bottom-4 left-4 right-4 p-4 rounded-xl glass-card text-sm" style="border-color: var(--accent-cyan); background: rgba(255,255,255,0.8);">
+                        <div class="font-bold mb-1" style="color: var(--accent-cyan);">悬停节点查看详情</div>
+                        <div style="color: var(--text-dim);">网络中心为马克，四条色带代表四个维度，连线粗细代表关系强度</div>
+                    </div>
+                </div>
+            </div>
+            <div class="mt-6 grid grid-cols-2 md:grid-cols-4 gap-3">
+                <div class="p-3 rounded-lg text-center text-sm" style="background: rgba(0,102,204,0.05); border: 1px solid rgba(0,102,204,0.15);">
+                    <div class="font-bold" style="color: var(--accent-cyan);">旧世界</div>
+                    <div class="text-xs mt-1" style="color: var(--text-dim);">ASH / 白月天 / 塔尔塔洛斯</div>
+                </div>
+                <div class="p-3 rounded-lg text-center text-sm" style="background: rgba(201,148,0,0.05); border: 1px solid rgba(201,148,0,0.15);">
+                    <div class="font-bold" style="color: var(--accent-gold);">灯塔</div>
+                    <div class="text-xs mt-1" style="color: var(--text-dim);">查尔斯 / 随影 / 冉冰</div>
+                </div>
+                <div class="p-3 rounded-lg text-center text-sm" style="background: rgba(0,136,68,0.05); border: 1px solid rgba(0,136,68,0.15);">
+                    <div class="font-bold" style="color: var(--accent-green);">龙骨村</div>
+                    <div class="text-xs mt-1" style="color: var(--text-dim);">白月魁 / 夏豆 / 赖大师</div>
+                </div>
+                <div class="p-3 rounded-lg text-center text-sm" style="background: rgba(102,51,170,0.05); border: 1px solid rgba(102,51,170,0.15);">
+                    <div class="font-bold" style="color: var(--accent-purple);">玛娜生态</div>
+                    <div class="text-xs mt-1" style="color: var(--text-dim);">玛娜初体 / 地蔓藤 / 主宰</div>
+                </div>
+            </div>
+        </div>
+        <div id="foreshadow" class="tab-panel">
+            <div class="text-center mb-8">
+                <h2 class="serif text-3xl font-bold mb-2" style="color: var(--accent-cyan);">伏笔-回扣 3D矩阵</h2>
+                <p class="text-sm" style="color: var(--text-dim);">翻转卡片查看伏笔从埋设到回收的完整链路</p>
+            </div>
+            <div class="flex justify-center gap-3 mb-8 flex-wrap">
+                <button onclick="filterForeshadow('all')" class="px-4 py-2 rounded-lg text-sm font-bold transition-all hover:scale-105" style="background: var(--bg-light); border: 1px solid var(--glass-border); color: var(--text-primary);">全部</button>
+                <button onclick="filterForeshadow('resolved')" class="px-4 py-2 rounded-lg text-sm font-bold transition-all hover:scale-105" style="background: rgba(0,136,68,0.08); border: 1px solid var(--accent-green); color: var(--accent-green);">已回扣</button>
+                <button onclick="filterForeshadow('pending')" class="px-4 py-2 rounded-lg text-sm font-bold transition-all hover:scale-105" style="background: rgba(201,148,0,0.08); border: 1px solid var(--accent-gold); color: var(--accent-gold);">进行中</button>
+                <button onclick="filterForeshadow('unresolved')" class="px-4 py-2 rounded-lg text-sm font-bold transition-all hover:scale-105" style="background: rgba(204,51,51,0.08); border: 1px solid var(--accent-red); color: var(--accent-red);">未完结</button>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="foreshadow-grid">
+                <div class="flip-card h-64 foreshadow-item resolved">
+                    <div class="flip-inner">
+                        <div class="flip-front glass-card flex flex-col justify-center items-center text-center">
+                            <div class="text-4xl mb-3">🧬</div>
+                            <div class="font-bold text-lg mb-2">马克克隆体</div>
+                            <div class="text-xs px-3 py-1 rounded-full status-resolved">✅ 已回扣</div>
+                            <div class="mt-3 text-xs" style="color: var(--text-dim);">S1实验室发现大量幼年克隆体</div>
+                            <div class="mt-2 text-xs" style="color: var(--accent-cyan);">↻ 悬停翻转</div>
+                        </div>
+                        <div class="flip-back flex flex-col justify-center">
+                            <div class="font-bold mb-2" style="color: var(--accent-green);">回扣路径</div>
+                            <div class="text-sm space-y-2">
+                                <div class="flex items-center gap-2"><span style="color: var(--accent-gold);">S1</span><span>实验室发现克隆体</span></div>
+                                <div class="text-center" style="color: var(--text-dim);">↓</div>
+                                <div class="flex items-center gap-2"><span style="color: var(--accent-gold);">S2</span><span>揭示「颅生」身份</span></div>
+                                <div class="text-center" style="color: var(--text-dim);">↓</div>
+                                <div class="flex items-center gap-2"><span style="color: var(--accent-gold);">S2</span><span>玛娜初体左脑诞生</span></div>
+                            </div>
+                            <div class="mt-3 text-xs p-2 rounded" style="background: rgba(0,136,68,0.08); color: var(--accent-green);">✦ 完成度：100%</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="flip-card h-64 foreshadow-item resolved">
+                    <div class="flip-inner">
+                        <div class="flip-front glass-card flex flex-col justify-center items-center text-center">
+                            <div class="text-4xl mb-3">🌙</div>
+                            <div class="font-bold text-lg mb-2">白月魁身份</div>
+                            <div class="text-xs px-3 py-1 rounded-full status-resolved">✅ 已回扣</div>
+                            <div class="mt-3 text-xs" style="color: var(--text-dim);">S1结尾神秘白发女子</div>
+                            <div class="mt-2 text-xs" style="color: var(--accent-cyan);">↻ 悬停翻转</div>
+                        </div>
+                        <div class="flip-back flex flex-col justify-center">
+                            <div class="font-bold mb-2" style="color: var(--accent-green);">回扣路径</div>
+                            <div class="text-sm space-y-2">
+                                <div class="flex items-center gap-2"><span style="color: var(--accent-gold);">S1</span><span>终章神秘出场</span></div>
+                                <div class="text-center" style="color: var(--text-dim);">↓</div>
+                                <div class="flex items-center gap-2"><span style="color: var(--accent-gold);">S2</span><span>龙骨村领导者</span></div>
+                                <div class="text-center" style="color: var(--text-dim);">↓</div>
+                                <div class="flex items-center gap-2"><span style="color: var(--accent-gold);">S2E7</span><span>旧世界回忆/灭世罪孽</span></div>
+                            </div>
+                            <div class="mt-3 text-xs p-2 rounded" style="background: rgba(0,136,68,0.08); color: var(--accent-green);">✦ 完成度：100%</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="flip-card h-64 foreshadow-item resolved">
+                    <div class="flip-inner">
+                        <div class="flip-front glass-card flex flex-col justify-center items-center text-center">
+                            <div class="text-4xl mb-3">🧠</div>
+                            <div class="font-bold text-lg mb-2">克洛托系统</div>
+                            <div class="text-xs px-3 py-1 rounded-full status-resolved">✅ 已回扣</div>
+                            <div class="mt-3 text-xs" style="color: var(--text-dim);">S1城主密室「最强大脑」</div>
+                            <div class="mt-2 text-xs" style="color: var(--accent-cyan);">↻ 悬停翻转</div>
+                        </div>
+                        <div class="flip-back flex flex-col justify-center">
+                            <div class="font-bold mb-2" style="color: var(--accent-green);">回扣路径</div>
+                            <div class="text-sm space-y-2">
+                                <div class="flex items-center gap-2"><span style="color: var(--accent-gold);">S1</span><span>城主密室神秘大脑</span></div>
+                                <div class="text-center" style="color: var(--text-dim);">↓</div>
+                                <div class="flex items-center gap-2"><span style="color: var(--accent-gold);">S2</span><span>玛娜初体大脑</span></div>
+                                <div class="text-center" style="color: var(--text-dim);">↓</div>
+                                <div class="flex items-center gap-2"><span style="color: var(--accent-gold);">S2</span><span>ASH意识关联</span></div>
+                            </div>
+                            <div class="mt-3 text-xs p-2 rounded" style="background: rgba(0,136,68,0.08); color: var(--accent-green);">✦ 完成度：100%</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="flip-card h-64 foreshadow-item pending">
+                    <div class="flip-inner">
+                        <div class="flip-front glass-card flex flex-col justify-center items-center text-center">
+                            <div class="text-4xl mb-3">👁️</div>
+                            <div class="font-bold text-lg mb-2">玛娜初体起源</div>
+                            <div class="text-xs px-3 py-1 rounded-full status-pending">⚠ 部分揭示</div>
+                            <div class="mt-3 text-xs" style="color: var(--text-dim);">生态之「祖宗」，但来源未明</div>
+                            <div class="mt-2 text-xs" style="color: var(--accent-cyan);">↻ 悬停翻转</div>
+                        </div>
+                        <div class="flip-back flex flex-col justify-center">
+                            <div class="font-bold mb-2" style="color: var(--accent-gold);">已知线索</div>
+                            <div class="text-sm space-y-2">
+                                <div>• 被更高维度「主宰」囚禁</div>
+                                <div>• 左脑诞生「颅生」</div>
+                                <div>• 与ASH意识融合</div>
+                                <div>• 地幔藤作为「锁链」</div>
+                            </div>
+                            <div class="mt-3 text-xs p-2 rounded" style="background: rgba(201,148,0,0.08); color: var(--accent-gold);">⚠ 缺失：主宰身份、初体诞生原因</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="flip-card h-64 foreshadow-item unresolved">
+                    <div class="flip-inner">
+                        <div class="flip-front glass-card flex flex-col justify-center items-center text-center">
+                            <div class="text-4xl mb-3">⚔️</div>
+                            <div class="font-bold text-lg mb-2">攻腥计划</div>
+                            <div class="text-xs px-3 py-1 rounded-full status-unresolved">❌ 未完结</div>
+                            <div class="mt-3 text-xs" style="color: var(--text-dim);">白月魁终极计划，成败未知</div>
+                            <div class="mt-2 text-xs" style="color: var(--accent-cyan);">↻ 悬停翻转</div>
+                        </div>
+                        <div class="flip-back flex flex-col justify-center">
+                            <div class="font-bold mb-2" style="color: var(--accent-red);">当前状态</div>
+                            <div class="text-sm space-y-2">
+                                <div>• 白月魁以死做局</div>
+                                <div>• 马克融入玛娜生态</div>
+                                <div>• 身体飘向太空</div>
+                                <div>• 疑似被「方舟」回收</div>
+                            </div>
+                            <div class="mt-3 text-xs p-2 rounded" style="background: rgba(204,51,51,0.08); color: var(--accent-red);">❌ 关键悬念：计划成功？马克是否毁灭世界？</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="flip-card h-64 foreshadow-item unresolved">
+                    <div class="flip-inner">
+                        <div class="flip-front glass-card flex flex-col justify-center items-center text-center">
+                            <div class="text-4xl mb-3">💔</div>
+                            <div class="font-bold text-lg mb-2">冉冰复活</div>
+                            <div class="text-xs px-3 py-1 rounded-full status-unresolved">❌ 未回扣</div>
+                            <div class="mt-3 text-xs" style="color: var(--text-dim);">生命源质被抽干后能否复活？</div>
+                            <div class="mt-2 text-xs" style="color: var(--accent-cyan);">↻ 悬停翻转</div>
+                        </div>
+                        <div class="flip-back flex flex-col justify-center">
+                            <div class="font-bold mb-2" style="color: var(--accent-red);">当前状态</div>
+                            <div class="text-sm space-y-2">
+                                <div>• S1被马克抽干生命源质</div>
+                                <div>• 成为马克永恒痛苦来源</div>
+                                <div>• 生态嵌合体理论上有复活可能</div>
+                                <div>• 但剧情未给出明确线索</div>
+                            </div>
+                            <div class="mt-3 text-xs p-2 rounded" style="background: rgba(204,51,51,0.08); color: var(--accent-red);">❌ 情感核心未解决，可能S3关键</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="flip-card h-64 foreshadow-item pending">
+                    <div class="flip-inner">
+                        <div class="flip-front glass-card flex flex-col justify-center items-center text-center">
+                            <div class="text-4xl mb-3">🛸</div>
+                            <div class="font-bold text-lg mb-2">外星文明/方舟</div>
+                            <div class="text-xs px-3 py-1 rounded-full status-pending">⚠ 仅暗示</div>
+                            <div class="mt-3 text-xs" style="color: var(--text-dim);">S2结尾疑似「方舟」出现</div>
+                            <div class="mt-2 text-xs" style="color: var(--accent-cyan);">↻ 悬停翻转</div>
+                        </div>
+                        <div class="flip-back flex flex-col justify-center">
+                            <div class="font-bold mb-2" style="color: var(--accent-gold);">已知线索</div>
+                            <div class="text-sm space-y-2">
+                                <div>• S2结尾太空漂浮</div>
+                                <div>• 疑似被外部力量回收</div>
+                                <div>• 与「主宰」理论关联</div>
+                                <div>• 可能为更高维度文明</div>
+                            </div>
+                            <div class="mt-3 text-xs p-2 rounded" style="background: rgba(201,148,0,0.08); color: var(--accent-gold);">⚠ 世界观扩展方向，S3或揭示</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="flip-card h-64 foreshadow-item pending">
+                    <div class="flip-inner">
+                        <div class="flip-front glass-card flex flex-col justify-center items-center text-center">
+                            <div class="text-4xl mb-3">☀️</div>
+                            <div class="font-bold text-lg mb-2">光影之主</div>
+                            <div class="text-xs px-3 py-1 rounded-full status-pending">⚠ 未完全揭示</div>
+                            <div class="mt-3 text-xs" style="color: var(--text-dim);">查尔斯信仰对象是否真实存在？</div>
+                            <div class="mt-2 text-xs" style="color: var(--accent-cyan);">↻ 悬停翻转</div>
+                        </div>
+                        <div class="flip-back flex flex-col justify-center">
+                            <div class="font-bold mb-2" style="color: var(--accent-gold);">分析</div>
+                            <div class="text-sm space-y-2">
+                                <div>• 查尔斯宗教统治工具？</div>
+                                <div>• 或真实存在的更高力量？</div>
+                                <div>• 与玛娜生态/主宰的关系？</div>
+                                <div>• 临渊者计划的精神基础</div>
+                            </div>
+                            <div class="mt-3 text-xs p-2 rounded" style="background: rgba(201,148,0,0.08); color: var(--accent-gold);">⚠ 可能为S3查尔斯线核心</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="flip-card h-64 foreshadow-item resolved">
+                    <div class="flip-inner">
+                        <div class="flip-front glass-card flex flex-col justify-center items-center text-center">
+                            <div class="text-4xl mb-3">🎭</div>
+                            <div class="font-bold text-lg mb-2">4068逆袭</div>
+                            <div class="text-xs px-3 py-1 rounded-full status-resolved">✅ 已回扣</div>
+                            <div class="mt-3 text-xs" style="color: var(--text-dim);">尘民→猎荒者队长→权力膨胀</div>
+                            <div class="mt-2 text-xs" style="color: var(--accent-cyan);">↻ 悬停翻转</div>
+                        </div>
+                        <div class="flip-back flex flex-col justify-center">
+                            <div class="font-bold mb-2" style="color: var(--accent-green);">回扣路径</div>
+                            <div class="text-sm space-y-2">
+                                <div class="flex items-center gap-2"><span style="color: var(--accent-gold);">S1</span><span>刺杀马克（被迫）</span></div>
+                                <div class="text-center" style="color: var(--text-dim);">↓</div>
+                                <div class="flex items-center gap-2"><span style="color: var(--accent-gold);">S2</span><span>成为随影，权力上升</span></div>
+                                <div class="text-center" style="color: var(--text-dim);">↓</div>
+                                <div class="flex items-center gap-2"><span style="color: var(--accent-gold);">S2</span><span>欲望膨胀，道德模糊</span></div>
+                            </div>
+                            <div class="mt-3 text-xs p-2 rounded" style="background: rgba(0,136,68,0.08); color: var(--accent-green);">✦ 完成度：100%（但行为逻辑有争议）</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="worldview" class="tab-panel">
+            <div class="text-center mb-8">
+                <h2 class="serif text-3xl font-bold mb-2" style="color: var(--accent-cyan);">世界观维度分层</h2>
+                <p class="text-sm" style="color: var(--text-dim);">从地表到太空的立体结构 · 每层独立运转又相互渗透</p>
+            </div>
+            <div class="scene-3d">
+                <div class="preserve-3d relative space-y-4">
+                    <div class="dimension-layer p-6 rounded-2xl glass-card" style="transform: translateZ(60px); border-color: var(--accent-purple);">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-full flex items-center justify-center text-lg" style="background: rgba(102,51,170,0.1);">🌌</div>
+                                <div>
+                                    <div class="font-bold text-lg" style="color: var(--accent-purple);">Layer 5 · 太空/未知维度</div>
+                                    <div class="text-xs" style="color: var(--text-dim);">更高维度生命 · 外星方舟 · 主宰</div>
+                                </div>
+                            </div>
+                            <div class="text-xs px-3 py-1 rounded-full" style="background: rgba(102,51,170,0.08); color: var(--accent-purple);">未知 90%</div>
+                        </div>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                            <div class="p-3 rounded-lg text-sm" style="background: rgba(102,51,170,0.04);"><div class="font-bold" style="color: var(--accent-purple);">主宰</div><div class="text-xs mt-1" style="color: var(--text-dim);">囚禁玛娜初体的存在</div></div>
+                            <div class="p-3 rounded-lg text-sm" style="background: rgba(102,51,170,0.04);"><div class="font-bold" style="color: var(--accent-purple);">方舟</div><div class="text-xs mt-1" style="color: var(--text-dim);">S2结尾疑似回收白月魁</div></div>
+                            <div class="p-3 rounded-lg text-sm" style="background: rgba(102,51,170,0.04);"><div class="font-bold" style="color: var(--accent-purple);">月相异动</div><div class="text-xs mt-1" style="color: var(--text-dim);">2048年灾难触发点</div></div>
+                            <div class="p-3 rounded-lg text-sm" style="background: rgba(102,51,170,0.04);"><div class="font-bold" style="color: var(--accent-purple);">?</div><div class="text-xs mt-1" style="color: var(--text-dim);">待S3揭示</div></div>
+                        </div>
+                    </div>
+                    <div class="dimension-layer p-6 rounded-2xl glass-card" style="transform: translateZ(45px); border-color: var(--accent-gold);">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-full flex items-center justify-center text-lg" style="background: rgba(201,148,0,0.1);">🏛️</div>
+                                <div>
+                                    <div class="font-bold text-lg" style="color: var(--accent-gold);">Layer 4 · 灯塔（天空）</div>
+                                    <div class="text-xs" style="color: var(--text-dim);">浮空监狱改造 · 社会达尔文主义</div>
+                                </div>
+                            </div>
+                            <div class="text-xs px-3 py-1 rounded-full" style="background: rgba(201,148,0,0.08); color: var(--accent-gold);">揭示 75%</div>
+                        </div>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                            <div class="p-3 rounded-lg text-sm" style="background: rgba(201,148,0,0.04);"><div class="font-bold" style="color: var(--accent-gold);">三大法则</div><div class="text-xs mt-1" style="color: var(--text-dim);">基因/伦理/远行</div></div>
+                            <div class="p-3 rounded-lg text-sm" style="background: rgba(201,148,0,0.04);"><div class="font-bold" style="color: var(--accent-gold);">克洛托</div><div class="text-xs mt-1" style="color: var(--text-dim);">玛娜初体大脑</div></div>
+                            <div class="p-3 rounded-lg text-sm" style="background: rgba(201,148,0,0.04);"><div class="font-bold" style="color: var(--accent-gold);">临渊者</div><div class="text-xs mt-1" style="color: var(--text-dim);">终极武器计划</div></div>
+                            <div class="p-3 rounded-lg text-sm" style="background: rgba(201,148,0,0.04);"><div class="font-bold" style="color: var(--accent-gold);">光影会</div><div class="text-xs mt-1" style="color: var(--text-dim);">宗教极权统治</div></div>
+                        </div>
+                    </div>
+                    <div class="dimension-layer p-6 rounded-2xl glass-card" style="transform: translateZ(30px); border-color: var(--accent-green);">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-full flex items-center justify-center text-lg" style="background: rgba(0,136,68,0.1);">🌿</div>
+                                <div>
+                                    <div class="font-bold text-lg" style="color: var(--accent-green);">Layer 3 · 龙骨村（地面）</div>
+                                    <div class="text-xs" style="color: var(--text-dim);">共生理念 · 科技修仙 · 屏蔽系统</div>
+                                </div>
+                            </div>
+                            <div class="text-xs px-3 py-1 rounded-full" style="background: rgba(0,136,68,0.08); color: var(--accent-green);">揭示 60%</div>
+                        </div>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                            <div class="p-3 rounded-lg text-sm" style="background: rgba(0,136,68,0.04);"><div class="font-bold" style="color: var(--accent-green);">屏蔽塔</div><div class="text-xs mt-1" style="color: var(--text-dim);">科技屏障非自身强大</div></div>
+                            <div class="p-3 rounded-lg text-sm" style="background: rgba(0,136,68,0.04);"><div class="font-bold" style="color: var(--accent-green);">觉行者</div><div class="text-xs mt-1" style="color: var(--text-dim);">经络潜能战士</div></div>
+                            <div class="p-3 rounded-lg text-sm" style="background: rgba(0,136,68,0.04);"><div class="font-bold" style="color: var(--accent-green);">归元术</div><div class="text-xs mt-1" style="color: var(--text-dim);">隐藏情绪躲避感知</div></div>
+                            <div class="p-3 rounded-lg text-sm" style="background: rgba(0,136,68,0.04);"><div class="font-bold" style="color: var(--accent-green);">攻腥计划</div><div class="text-xs mt-1" style="color: var(--text-dim);">白月魁终极布局</div></div>
+                        </div>
+                    </div>
+                    <div class="dimension-layer p-6 rounded-2xl glass-card" style="transform: translateZ(15px); border-color: var(--accent-red);">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-full flex items-center justify-center text-lg" style="background: rgba(204,51,51,0.1);">☣️</div>
+                                <div>
+                                    <div class="font-bold text-lg" style="color: var(--accent-red);">Layer 2 · 玛娜生态（地表）</div>
+                                    <div class="text-xs" style="color: var(--text-dim);">地蔓藤 · 噬极兽 · 猩红素</div>
+                                </div>
+                            </div>
+                            <div class="text-xs px-3 py-1 rounded-full" style="background: rgba(204,51,51,0.08); color: var(--accent-red);">揭示 70%</div>
+                        </div>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                            <div class="p-3 rounded-lg text-sm" style="background: rgba(204,51,51,0.04);"><div class="font-bold" style="color: var(--accent-red);">玛娜初体</div><div class="text-xs mt-1" style="color: var(--text-dim);">生态之祖</div></div>
+                            <div class="p-3 rounded-lg text-sm" style="background: rgba(204,51,51,0.04);"><div class="font-bold" style="color: var(--accent-red);">噬极兽</div><div class="text-xs mt-1" style="color: var(--text-dim);">吸食生命源质</div></div>
+                            <div class="p-3 rounded-lg text-sm" style="background: rgba(204,51,51,0.04);"><div class="font-bold" style="color: var(--accent-red);">腥漩</div><div class="text-xs mt-1" style="color: var(--text-dim);">生态核心通道</div></div>
+                            <div class="p-3 rounded-lg text-sm" style="background: rgba(204,51,51,0.04);"><div class="font-bold" style="color: var(--accent-red);">地幔藤</div><div class="text-xs mt-1" style="color: var(--text-dim);">囚禁玛娜的锁链</div></div>
+                        </div>
+                    </div>
+                    <div class="dimension-layer p-6 rounded-2xl glass-card" style="transform: translateZ(0px); border-color: var(--accent-cyan);">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-full flex items-center justify-center text-lg" style="background: rgba(0,102,204,0.1);">🏭</div>
+                                <div>
+                                    <div class="font-bold text-lg" style="color: var(--accent-cyan);">Layer 1 · 旧世界遗迹（地下）</div>
+                                    <div class="text-xs" style="color: var(--text-dim);">塔尔塔洛斯实验室 · ASH · 细胞再生</div>
+                                </div>
+                            </div>
+                            <div class="text-xs px-3 py-1 rounded-full" style="background: rgba(0,102,204,0.08); color: var(--accent-cyan);">揭示 80%</div>
+                        </div>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                            <div class="p-3 rounded-lg text-sm" style="background: rgba(0,102,204,0.04);"><div class="font-bold" style="color: var(--accent-cyan);">ASH</div><div class="text-xs mt-1" style="color: var(--text-dim);">超级AI意识</div></div>
+                            <div class="p-3 rounded-lg text-sm" style="background: rgba(0,102,204,0.04);"><div class="font-bold" style="color: var(--accent-cyan);">塔尔塔洛斯</div><div class="text-xs mt-1" style="color: var(--text-dim);">囚禁泰坦的深渊</div></div>
+                            <div class="p-3 rounded-lg text-sm" style="background: rgba(0,102,204,0.04);"><div class="font-bold" style="color: var(--accent-cyan);">克隆实验</div><div class="text-xs mt-1" style="color: var(--text-dim);">马克/颅生诞生</div></div>
+                            <div class="p-3 rounded-lg text-sm" style="background: rgba(0,102,204,0.04);"><div class="font-bold" style="color: var(--accent-cyan);">细胞再生</div><div class="text-xs mt-1" style="color: var(--text-dim);">噬极兽再生源头</div></div>
+                        </div>
+                    </div>
+                    <div class="flex justify-center gap-8 py-4 text-xs" style="color: var(--text-dim);">
+                        <div class="flex items-center gap-2"><span style="color: var(--accent-cyan);">↑↓</span><span>生命源质流动</span></div>
+                        <div class="flex items-center gap-2"><span style="color: var(--accent-purple);">⇅</span><span>意识渗透</span></div>
+                        <div class="flex items-center gap-2"><span style="color: var(--accent-red);">⇄</span><span>生态入侵</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="analysis" class="tab-panel">
+            <div class="text-center mb-8">
+                <h2 class="serif text-3xl font-bold mb-2" style="color: var(--accent-cyan);">多维综合分析</h2>
+                <p class="text-sm" style="color: var(--text-dim);">世界观完成度 · 伏笔回收率 · 叙事结构评估</p>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                <div class="glass-card rounded-2xl p-6">
+                    <h3 class="font-bold mb-4 text-center" style="color: var(--accent-cyan);">世界观维度评估雷达</h3>
+                    <svg viewBox="0 0 300 300" class="w-full max-w-[300px] mx-auto">
+                        <polygon points="150,30 270,90 270,210 150,270 30,210 30,90" fill="none" stroke="rgba(0,0,0,0.1)" stroke-width="1"/>
+                        <polygon points="150,70 230,110 230,190 150,230 70,190 70,110" fill="none" stroke="rgba(0,0,0,0.1)" stroke-width="1"/>
+                        <polygon points="150,110 190,130 190,170 150,190 110,170 110,130" fill="none" stroke="rgba(0,0,0,0.1)" stroke-width="1"/>
+                        <polygon points="150,50 250,100 250,200 150,240 50,200 50,100" fill="rgba(0,102,204,0.1)" stroke="#0066cc" stroke-width="2"/>
+                        <text x="150" y="25" text-anchor="middle" fill="#0066cc" font-size="11">设定深度</text>
+                        <text x="280" y="85" text-anchor="middle" fill="#0066cc" font-size="11">视觉表现</text>
+                        <text x="280" y="215" text-anchor="middle" fill="#0066cc" font-size="11">哲学融合</text>
+                        <text x="150" y="285" text-anchor="middle" fill="#0066cc" font-size="11">叙事节奏</text>
+                        <text x="20" y="215" text-anchor="middle" fill="#0066cc" font-size="11">伏笔回收</text>
+                        <text x="20" y="85" text-anchor="middle" fill="#0066cc" font-size="11">角色塑造</text>
+                        <circle cx="150" cy="50" r="4" fill="#0066cc"/>
+                        <circle cx="250" cy="100" r="4" fill="#0066cc"/>
+                        <circle cx="250" cy="200" r="4" fill="#0066cc"/>
+                        <circle cx="150" cy="240" r="4" fill="#0066cc"/>
+                        <circle cx="50" cy="200" r="4" fill="#0066cc"/>
+                        <circle cx="50" cy="100" r="4" fill="#0066cc"/>
+                    </svg>
+                    <div class="mt-4 grid grid-cols-3 gap-2 text-center text-xs">
+                        <div><span style="color: var(--accent-cyan);">●</span> 设定深度 9/10</div>
+                        <div><span style="color: var(--accent-cyan);">●</span> 视觉表现 9/10</div>
+                        <div><span style="color: var(--accent-cyan);">●</span> 哲学融合 8/10</div>
+                        <div><span style="color: var(--accent-cyan);">●</span> 叙事节奏 5/10</div>
+                        <div><span style="color: var(--accent-cyan);">●</span> 伏笔回收 6/10</div>
+                        <div><span style="color: var(--accent-cyan);">●</span> 角色塑造 7/10</div>
+                    </div>
+                </div>
+                <div class="glass-card rounded-2xl p-6 space-y-6">
+                    <h3 class="font-bold text-center" style="color: var(--accent-cyan);">伏笔回收进度</h3>
+                    <div>
+                        <div class="flex justify-between text-sm mb-2"><span>第一季伏笔</span><span style="color: var(--accent-green);">70%</span></div>
+                        <div class="h-2 rounded-full overflow-hidden" style="background: var(--bg-light);">
+                            <div class="h-full rounded-full" style="width: 70%; background: linear-gradient(90deg, var(--accent-green), var(--accent-cyan));"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="flex justify-between text-sm mb-2"><span>第二季伏笔</span><span style="color: var(--accent-gold);">45%</span></div>
+                        <div class="h-2 rounded-full overflow-hidden" style="background: var(--bg-light);">
+                            <div class="h-full rounded-full" style="width: 45%; background: linear-gradient(90deg, var(--accent-gold), var(--accent-red));"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="flex justify-between text-sm mb-2"><span>世界观完成度</span><span style="color: var(--accent-cyan);">65%</span></div>
+                        <div class="h-2 rounded-full overflow-hidden" style="background: var(--bg-light);">
+                            <div class="h-full rounded-full" style="width: 65%; background: linear-gradient(90deg, var(--accent-cyan), var(--accent-purple));"></div>
+                        </div>
+                    </div>
+                    <div class="pt-4 border-t" style="border-color: var(--glass-border);">
+                        <div class="text-sm mb-3 font-bold" style="color: var(--accent-red);">⚠ 风险预警</div>
+                        <div class="space-y-2 text-xs" style="color: var(--text-dim);">
+                            <div class="flex items-start gap-2"><span style="color: var(--accent-red);">▸</span><span>挖坑速度 > 填坑速度，存在烂尾隐患</span></div>
+                            <div class="flex items-start gap-2"><span style="color: var(--accent-red);">▸</span><span>第二季设定膨胀，剧情推进缓慢</span></div>
+                            <div class="flex items-start gap-2"><span style="color: var(--accent-red);">▸</span><span>主角马克主动性不足，成长线被安排</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="glass-card rounded-xl p-5 text-center" style="border-color: var(--accent-green);">
+                    <div class="text-3xl mb-2">✅</div>
+                    <div class="font-bold mb-2" style="color: var(--accent-green);">成功之处</div>
+                    <div class="text-sm space-y-1" style="color: var(--text-dim);">
+                        <div>• 东西方哲学融合创新</div>
+                        <div>• 希腊神话隐喻体系</div>
+                        <div>• 视觉美学顶尖水准</div>
+                        <div>• 配角塑造立体丰满</div>
+                    </div>
+                </div>
+                <div class="glass-card rounded-xl p-5 text-center" style="border-color: var(--accent-gold);">
+                    <div class="text-3xl mb-2">⚠️</div>
+                    <div class="font-bold mb-2" style="color: var(--accent-gold);">进行中</div>
+                    <div class="text-sm space-y-1" style="color: var(--text-dim);">
+                        <div>• 攻腥计划成败</div>
+                        <div>• 主宰/方舟身份</div>
+                        <div>• 光影之主真相</div>
+                        <div>• 龙骨村大眼含义</div>
+                    </div>
+                </div>
+                <div class="glass-card rounded-xl p-5 text-center" style="border-color: var(--accent-red);">
+                    <div class="text-3xl mb-2">❌</div>
+                    <div class="font-bold mb-2" style="color: var(--accent-red);">待改进</div>
+                    <div class="text-sm space-y-1" style="color: var(--text-dim);">
+                        <div>• 第二季节奏拖沓</div>
+                        <div>• 部分逻辑硬伤</div>
+                        <div>• 主角成长线薄弱</div>
+                        <div>• 设定碎片化门槛高</div>
+                    </div>
+                </div>
+            </div>
+            <div class="mt-8 glass-card rounded-2xl p-8 text-center" style="border-color: var(--accent-cyan); animation: pulse-glow 4s infinite;">
+                <div class="serif text-2xl font-bold mb-4" style="color: var(--accent-cyan);">总体判定</div>
+                <div class="text-lg leading-relaxed max-w-2xl mx-auto" style="color: var(--text-primary);">
+                    《灵笼》世界观构建在国漫中属<strong style="color: var(--accent-cyan);">顶尖水平</strong>，
+                    伏笔设计有野心，但第二季存在<strong style="color: var(--accent-gold);">「设定膨胀」</strong>风险。
+                    若后续能稳定回收核心伏笔（攻腥计划、主宰身份、马克抉择），
+                    有望成为国产科幻动画的<strong style="color: var(--accent-green);">里程碑</strong>；
+                    反之则可能陷入<strong style="color: var(--accent-red);">「挖坑不填」</strong>的困境。
+                </div>
+                <div class="mt-6 flex justify-center gap-4 text-sm">
+                    <div class="px-4 py-2 rounded-lg" style="background: rgba(0,102,204,0.06); border: 1px solid var(--accent-cyan);"><span style="color: var(--accent-cyan);">世界观</span> ★★★★☆</div>
+                    <div class="px-4 py-2 rounded-lg" style="background: rgba(201,148,0,0.06); border: 1px solid var(--accent-gold);"><span style="color: var(--accent-gold);">伏笔回收</span> ★★★☆☆</div>
+                    <div class="px-4 py-2 rounded-lg" style="background: rgba(204,51,51,0.06); border: 1px solid var(--accent-red);"><span style="color: var(--accent-red);">叙事节奏</span> ★★★☆☆</div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="relative z-10 py-8 text-center text-xs" style="color: var(--text-dim);">
+        <p>灵笼 · 多维世界观建模系统 | 基于第一、二季内容整理</p>
+        <p class="mt-1">可视化设计：多维并行时间线 × 3D拓扑网络 × 翻转矩阵 × 维度分层</p>
+    </footer>
+
+    <div id="detail-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4" style="background: rgba(0,0,0,0.5); backdrop-filter: blur(10px);">
+        <div class="glass-card rounded-2xl p-6 max-w-md w-full relative" style="border-color: var(--accent-cyan); background: rgba(255,255,255,0.9);">
+            <button onclick="closeDetail()" class="absolute top-4 right-4 text-xl" style="color: var(--text-dim);">×</button>
+            <div id="detail-content"></div>
+        </div>
+    </div>
+
+    <script>
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        // ===== 生命源质粒子系统 - 白色背景版 =====
+        function createParticles() {
+            const container = document.getElementById('particles');
+            const types = ['particle-core', 'particle-mid', 'particle-large', 'particle-corrupt', 'particle-gold'];
+            const typeWeights = [0.4, 0.25, 0.15, 0.1, 0.1];
+
+            for (let i = 0; i < 60; i++) {
+                const p = document.createElement('div');
+                const rand = Math.random();
+                let typeIdx = 0;
+                let cum = 0;
+                for (let j = 0; j < typeWeights.length; j++) {
+                    cum += typeWeights[j];
+                    if (rand < cum) { typeIdx = j; break; }
+                }
+                p.className = 'particle ' + types[typeIdx];
+
+                // 随机起始位置
+                const startX = Math.random() * 100;
+                const startY = Math.random() * 100;
+                p.style.left = startX + '%';
+                p.style.top = startY + '%';
+
+                // 漂移路径 - 模拟生命源质被吸食的流动感
+                const driftX = (Math.random() - 0.5) * 300;
+                const driftY = (Math.random() - 0.5) * 300;
+                const driftX2 = driftX + (Math.random() - 0.5) * 150;
+                const driftY2 = driftY + (Math.random() - 0.5) * 150;
+                const driftX3 = driftX2 + (Math.random() - 0.5) * 100;
+                const driftY3 = driftY2 + (Math.random() - 0.5) * 100;
+                const driftX4 = driftX3 + (Math.random() - 0.5) * 80;
+                const driftY4 = driftY3 + (Math.random() - 0.5) * 80;
+                const endX = driftX4 + (Math.random() - 0.5) * 50;
+                const endY = driftY4 + (Math.random() - 0.5) * 50;
+
+                p.style.setProperty('--drift-x-1', driftX * 0.2 + 'px');
+                p.style.setProperty('--drift-y-1', driftY * 0.2 + 'px');
+                p.style.setProperty('--drift-x-2', driftX2 * 0.4 + 'px');
+                p.style.setProperty('--drift-y-2', driftY2 * 0.4 + 'px');
+                p.style.setProperty('--drift-x-3', driftX3 * 0.7 + 'px');
+                p.style.setProperty('--drift-y-3', driftY3 * 0.7 + 'px');
+                p.style.setProperty('--drift-x-4', driftX4 * 0.9 + 'px');
+                p.style.setProperty('--drift-y-4', driftY4 * 0.9 + 'px');
+                p.style.setProperty('--drift-x-end', endX + 'px');
+                p.style.setProperty('--drift-y-end', endY + 'px');
+
+                // 随机动画时长和延迟
+                const duration = 12 + Math.random() * 16;
+                const delay = Math.random() * -20;
+                p.style.animationDuration = duration + 's';
+                p.style.animationDelay = delay + 's';
+
+                container.appendChild(p);
+            }
+
+            // 添加漩涡中心效果（模拟腥漩）
+            const vortex = document.createElement('div');
+            vortex.className = 'vortex-center';
+            vortex.style.left = '70%';
+            vortex.style.top = '30%';
+            container.appendChild(vortex);
+
+            const vortex2 = document.createElement('div');
+            vortex2.className = 'vortex-center';
+            vortex2.style.left = '20%';
+            vortex2.style.top = '60%';
+            vortex2.style.animationDelay = '-10s';
+            container.appendChild(vortex2);
+        }
+        createParticles();
+
+        function filterForeshadow(type) {
+            const items = document.querySelectorAll('.foreshadow-item');
+            items.forEach(item => {
+                if (type === 'all') {
+                    item.style.display = 'block';
+                } else if (item.classList.contains(type)) {
+                    item.style.display = 'block';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        }
+
+        const detailData = {
+            'old1': { title: 'ASH诞生', content: '旧世界久川市的超级人工智能，控制城市基础设施。后来与玛娜初体意识融合，成为生态的一部分。' },
+            'old2': { title: '细胞再生技术', content: '塔尔塔洛斯实验室的核心技术，与噬极兽的再生能力直接相关。马克克隆实验的基础。' },
+            'old3': { title: '2048·月相异动', content: '地质灾难的触发点，导致地蔓藤孢子大规模扩散，地表被玛娜生态吞噬。' },
+            'old4': { title: '玛娜初体现世', content: '生态之「祖宗」，被更高维度「主宰」囚禁。左脑诞生「颅生」，即马克的原型。' },
+            'lh1': { title: '浮空监狱改造', content: '旧世界塔尔塔洛斯浮空监狱被改造为灯塔，成为人类最后的避难所。' },
+            'lh2': { title: '三大法则确立', content: '基因种姓制、断绝伦理关系、年长者远行。为生存牺牲人性的极端制度。' },
+            'lh3': { title: 'S1·马克觉醒', content: '马克发现自己是实验体，冉冰被抽干生命源质，马克变成怪物被放逐。' },
+            'lh4': { title: 'S2·查尔斯执政', content: '查尔斯通过光影会建立极权统治，穿上临渊者成为灯塔最强战力。' },
+            'lh5': { title: 'S2·灯塔危机', content: '噬极兽大规模进攻灯塔，白月魁亲自驰援，揭示与灯塔的「未尽往事」。' },
+            'db1': { title: '白月魁建立', content: '旧世界幸存者，背负灭世罪孽。建立龙骨村，倡导「万物并育而不相害」。' },
+            'db2': { title: '屏蔽塔系统', content: '科技屏障保护龙骨村，但村民误以为自身强大。S2揭示这一真相。' },
+            'db3': { title: 'S2·马克到来', content: '马克作为生态嵌合体来到龙骨村，学习归元术，逐渐掌握自身力量。' },
+            'db4': { title: 'S2·攻腥计划', content: '白月魁的终极计划，以自身为饵，让马克融入玛娜生态从内部瓦解。' },
+            'db5': { title: 'S2·太空漂浮', content: '白月魁身体飘向太空，疑似被「方舟」回收。生死未卜。' },
+            'mn1': { title: '孢子扩散', content: '地蔓藤孢子通过空气传播，感染人类并释放猩红素。' },
+            'mn2': { title: '噬极兽诞生', content: '玛娜生态孕育的怪物，吸食人类生命源质，常规手段无法消灭。' },
+            'mn3': { title: '玛娜初体', content: '生态的核心，被地幔藤囚禁。与马克融合后，生态发生剧变。' },
+            'mn4': { title: '腥漩通道', content: '玛娜生态的核心通道，连接各个生态节点。攻腥计划的关键目标。' },
+            'mn5': { title: 'S2·马克融合', content: '马克与玛娜初体深度融合，成为生态的一部分。是拯救还是毁灭？' }
+        };
+
+        function showDetail(key) {
+            const data = detailData[key];
+            if (data) {
+                document.getElementById('detail-content').innerHTML = `
+                    <h3 class="font-bold text-xl mb-3" style="color: var(--accent-cyan);">${data.title}</h3>
+                    <p class="text-sm leading-relaxed" style="color: var(--text-primary);">${data.content}</p>
+                `;
+                document.getElementById('detail-modal').classList.remove('hidden');
+                document.getElementById('detail-modal').classList.add('flex');
+            }
+        }
+
+        function closeDetail() {
+            document.getElementById('detail-modal').classList.add('hidden');
+            document.getElementById('detail-modal').classList.remove('flex');
+        }
+
+        document.querySelectorAll('.network-node').forEach(node => {
+            node.addEventListener('mouseenter', function() {
+                const info = this.getAttribute('data-info');
+                document.getElementById('network-info').innerHTML = `
+                    <div class="font-bold mb-1" style="color: var(--accent-cyan);">${this.querySelector('text').textContent}</div>
+                    <div style="color: var(--text-dim);">${info}</div>
+                `;
+            });
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            const x = (e.clientX / window.innerWidth - 0.5) * 15;
+            const y = (e.clientY / window.innerHeight - 0.5) * 15;
+            document.querySelectorAll('.preserve-3d').forEach(el => {
+                if (!el.closest('.flip-card')) {
+                    el.style.transform = `rotateY(${x}deg) rotateX(${-y}deg)`;
+                }
+            });
+        });
+    </script>
+</body>
+</html>
