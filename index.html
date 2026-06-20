@@ -1,0 +1,2256 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>灵笼 · 终极伏笔圆环 · 多线交织推演</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700;900&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #f8f9fa;
+  --card: rgba(255,255,255,0.85);
+  --cyan: #0066cc;
+  --gold: #c99400;
+  --red: #cc3333;
+  --green: #008844;
+  --purple: #6633aa;
+  --pink: #cc3366;
+  --blue: #0066cc;
+  --text: #1a1a2e;
+  --dim: #6b7280;
+  --border: rgba(0,0,0,0.08);
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  font-family: 'Noto Sans SC', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  overflow-x: hidden;
+}
+.serif { font-family: 'Noto Serif SC', serif; }
+
+/* 粒子 */
+.particle {
+  position: absolute; border-radius: 50%; pointer-events: none;
+  will-change: transform, opacity;
+}
+.p-blue { width:3px; height:3px; background:radial-gradient(circle,rgba(0,102,204,0.8) 0%,transparent 70%); box-shadow:0 0 6px 2px rgba(0,102,204,0.3); animation:drift linear infinite; }
+.p-green { width:4px; height:4px; background:radial-gradient(circle,rgba(0,136,68,0.7) 0%,transparent 60%); box-shadow:0 0 8px 3px rgba(0,136,68,0.2); animation:drift linear infinite; }
+.p-purple { width:5px; height:5px; background:radial-gradient(circle,rgba(102,51,170,0.6) 0%,transparent 55%); box-shadow:0 0 10px 4px rgba(102,51,170,0.15); animation:drift linear infinite; }
+.p-red { width:3px; height:3px; background:radial-gradient(circle,rgba(204,51,51,0.7) 0%,transparent 60%); box-shadow:0 0 6px 2px rgba(204,51,51,0.2); animation:drift linear infinite; }
+.p-gold { width:3px; height:3px; background:radial-gradient(circle,rgba(201,148,0,0.7) 0%,transparent 60%); box-shadow:0 0 6px 2px rgba(201,148,0,0.2); animation:drift linear infinite; }
+@keyframes drift {
+  0% { transform:translate3d(0,0,0) scale(0.3); opacity:0; }
+  10% { opacity:1; transform:translate3d(var(--dx1),var(--dy1),10px) scale(1); }
+  30% { transform:translate3d(var(--dx2),var(--dy2),30px) scale(1.1); }
+  60% { transform:translate3d(var(--dx3),var(--dy3),20px) scale(0.9); opacity:0.7; }
+  90% { opacity:0.3; }
+  100% { transform:translate3d(var(--dx4),var(--dy4),0) scale(0.2); opacity:0; }
+}
+
+/* 玻璃卡片 */
+.glass {
+  background: var(--card);
+  backdrop-filter: blur(16px);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  transition: all 0.4s cubic-bezier(0.4,0,0.2,1);
+}
+.glass:hover {
+  border-color: var(--cyan);
+  box-shadow: 0 8px 40px rgba(0,102,204,0.1);
+  transform: translateY(-4px);
+}
+
+/* 时间线节点 */
+.node {
+  position: relative;
+  padding: 12px 20px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s;
+  border-left: 3px solid transparent;
+}
+.node:hover { transform: translateX(8px); box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+.node.cyan { border-left-color: var(--cyan); background: rgba(0,102,204,0.04); }
+.node.gold { border-left-color: var(--gold); background: rgba(201,148,0,0.04); }
+.node.green { border-left-color: var(--green); background: rgba(0,136,68,0.04); }
+.node.purple { border-left-color: var(--purple); background: rgba(102,51,170,0.04); }
+.node.red { border-left-color: var(--red); background: rgba(204,51,51,0.04); }
+
+/* Tab */
+.tab-btn {
+  padding: 10px 20px;
+  border: none;
+  background: transparent;
+  color: var(--dim);
+  cursor: pointer;
+  font-size: 0.85rem;
+  border-bottom: 2px solid transparent;
+  transition: all 0.3s;
+  white-space: nowrap;
+}
+.tab-btn.active { color: var(--cyan); border-bottom-color: var(--cyan); }
+.tab-panel { display: none; animation: fadeIn 0.5s; }
+.tab-panel.active { display: block; }
+@keyframes fadeIn { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
+
+/* 翻转卡片 */
+.flip-card { perspective: 1000px; cursor: pointer; }
+.flip-inner { position: relative; width: 100%; height: 100%; transition: transform 0.8s; transform-style: preserve-3d; }
+.flip-card:hover .flip-inner { transform: rotateY(180deg); }
+.flip-front, .flip-back {
+  position: absolute; width: 100%; height: 100%;
+  backface-visibility: hidden; border-radius: 16px; padding: 1.5rem;
+}
+.flip-front { background: white; border: 1px solid var(--border); }
+.flip-back { transform: rotateY(180deg); background: #f0f2f5; border: 1px solid var(--cyan); }
+
+/* 状态标签 */
+.tag-resolved { background: rgba(0,136,68,0.08); color: var(--green); border: 1px solid var(--green); }
+.tag-pending { background: rgba(201,148,0,0.08); color: var(--gold); border: 1px solid var(--gold); }
+.tag-unresolved { background: rgba(204,51,51,0.08); color: var(--red); border: 1px solid var(--red); }
+.tag-music { background: rgba(102,51,170,0.08); color: var(--purple); border: 1px solid var(--purple); }
+
+/* 网格背景 */
+.grid-bg {
+  background-image: linear-gradient(rgba(0,102,204,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(0,102,204,0.03) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+/* 进度条 */
+.progress-track { height: 6px; border-radius: 3px; background: #e5e7eb; overflow: hidden; }
+.progress-fill { height: 100%; border-radius: 3px; transition: width 1s ease; }
+
+/* 3D透视容器 */
+.scene-3d { perspective: 1200px; }
+.preserve-3d { transform-style: preserve-3d; }
+
+/* 音乐波形 */
+.wave-container { display: flex; align-items: flex-end; gap: 3px; height: 30px; }
+.wave-bar {
+  width: 4px;
+  background: linear-gradient(to top, var(--cyan), var(--purple));
+  border-radius: 2px;
+  animation: wave 1s ease-in-out infinite;
+}
+@keyframes wave {
+  0%, 100% { height: 10px; opacity: 0.6; }
+  50% { height: 25px; opacity: 1; }
+}
+
+/* 歌词卡片 */
+.lyric-card {
+  border-left: 3px solid var(--cyan);
+  background: linear-gradient(90deg, rgba(0,102,204,0.03), transparent);
+  padding: 12px 16px;
+  border-radius: 0 8px 8px 0;
+  transition: all 0.3s;
+  margin-bottom: 8px;
+}
+.lyric-card:hover {
+  border-left-color: var(--purple);
+  transform: translateX(4px);
+  background: linear-gradient(90deg, rgba(102,51,170,0.05), transparent);
+}
+
+/* 歌曲卡片 */
+.song-card {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  overflow: hidden;
+  transition: all 0.4s cubic-bezier(0.4,0,0.2,1);
+}
+.song-card:hover {
+  box-shadow: 0 8px 40px rgba(0,0,0,0.1);
+  transform: translateY(-4px);
+}
+
+/* 来源标签 */
+.source-tag {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+@media (max-width: 768px) {
+  .scene-3d { perspective: 800px; }
+  .tab-btn { padding: 8px 12px; font-size: 0.8rem; }
+}
+</style>
+</head>
+<body class="grid-bg">
+
+<!-- 粒子层 -->
+<div id="particles" class="fixed inset-0 pointer-events-none z-0 overflow-hidden"></div>
+
+<!-- 头部 -->
+<header class="relative z-10 pt-16 pb-10 px-6 text-center">
+  <h1 class="serif text-5xl md:text-7xl font-black tracking-wider mb-3" style="color:var(--cyan); text-shadow:0 0 30px rgba(0,102,204,0.15);">灵笼</h1>
+  <p class="text-lg md:text-xl tracking-[0.2em]" style="color:var(--dim);">终极伏笔圆环 · 多线交织并行推演</p>
+  <p class="text-sm mt-3" style="color:var(--dim);">基于S1-S2全部伏笔的系统性回收方案 · 五维并行叙事架构 · 音乐叙事层 · 二创洞察</p>
+  <div class="mt-6 flex justify-center gap-3 text-xs flex-wrap">
+    <span class="px-3 py-1 rounded-full border" style="border-color:var(--green);color:var(--green);">● 已回扣</span>
+    <span class="px-3 py-1 rounded-full border" style="border-color:var(--gold);color:var(--gold);">● 进行中</span>
+    <span class="px-3 py-1 rounded-full border" style="border-color:var(--red);color:var(--red);">● 未完结</span>
+  </div>
+</header>
+
+<!-- 导航 -->
+<nav class="relative z-10 sticky top-0 backdrop-blur-xl border-b px-4 py-2 flex justify-center gap-1 flex-wrap" style="background:rgba(248,249,250,0.9);border-color:var(--border);">
+  <button class="tab-btn active" onclick="switchTab('overview')">🎯 总览架构</button>
+  <button class="tab-btn" onclick="switchTab('music')">🎵 音乐叙事层</button>
+  <button class="tab-btn" onclick="switchTab('fanon')">🌍 二创洞察</button>
+  <button class="tab-btn" onclick="switchTab('timeline')">⏳ 五线并行</button>
+  <button class="tab-btn" onclick="switchTab('resolve')">🔄 伏笔回收</button>
+  <button class="tab-btn" onclick="switchTab('interweave')">🕸️ 交织节点</button>
+  <button class="tab-btn" onclick="switchTab('ending')">🔮 终局推演</button>
+  <button class="tab-btn" onclick="switchTab('ants')">🐜 蝼蚁叙事层</button>
+  <button class="tab-btn" onclick="switchTab('dao')">☯️ 东方哲学重解</button>
+</nav>
+
+<main class="relative z-10 px-4 md:px-8 py-10 max-w-7xl mx-auto">
+
+<!-- ========== TAB 1: 总览架构 ========== -->
+<div id="overview" class="tab-panel active">
+
+  <!-- 核心命题 -->
+  <div class="glass p-8 mb-10 text-center" style="border-color:var(--cyan);">
+    <div class="serif text-2xl font-bold mb-4" style="color:var(--cyan);">核心命题：「囚徒困境」的终极解法</div>
+    <p class="text-base leading-relaxed max-w-3xl mx-auto" style="color:var(--text);">
+      灵笼的本质是<strong style="color:var(--cyan);">三层囚徒困境</strong>：
+      人类被玛娜囚禁于灯塔/地面，玛娜初体被「主宰」囚禁于地幔藤，
+      而「主宰」本身是否也是更高维度的囚徒？
+      破局的关键不是消灭任何一方，而是<strong style="color:var(--green);">打破囚禁的链条</strong>——
+      这正是「攻腥计划」的深层逻辑，也是所有伏笔收束的终极方向。
+    </p>
+  </div>
+
+  <!-- 五维架构图 -->
+  <div class="grid grid-cols-1 md:grid-cols-5 gap-4 mb-10">
+    <div class="glass p-5 text-center" style="border-top:4px solid var(--cyan);">
+      <div class="text-3xl mb-2">🏛️</div>
+      <div class="font-bold text-sm mb-1" style="color:var(--cyan);">维度A · 旧世界线</div>
+      <div class="text-xs" style="color:var(--dim);">ASH / 塔尔塔洛斯 / 细胞再生 / 颅生实验</div>
+      <div class="mt-2 text-xs px-2 py-1 rounded-full tag-resolved">已揭示80%</div>
+    </div>
+    <div class="glass p-5 text-center" style="border-top:4px solid var(--gold);">
+      <div class="text-3xl mb-2">🏰</div>
+      <div class="font-bold text-sm mb-1" style="color:var(--gold);">维度B · 灯塔线</div>
+      <div class="text-xs" style="color:var(--dim);">三大法则 / 克洛托 / 临渊者 / 查尔斯</div>
+      <div class="mt-2 text-xs px-2 py-1 rounded-full tag-pending">揭示75%</div>
+    </div>
+    <div class="glass p-5 text-center" style="border-top:4px solid var(--green);">
+      <div class="text-3xl mb-2">🌿</div>
+      <div class="font-bold text-sm mb-1" style="color:var(--green);">维度C · 龙骨村线</div>
+      <div class="text-xs" style="color:var(--dim);">屏蔽塔 / 觉行者 / 攻腥计划 / 白月魁</div>
+      <div class="mt-2 text-xs px-2 py-1 rounded-full tag-pending">揭示60%</div>
+    </div>
+    <div class="glass p-5 text-center" style="border-top:4px solid var(--purple);">
+      <div class="text-3xl mb-2">☣️</div>
+      <div class="font-bold text-sm mb-1" style="color:var(--purple);">维度D · 玛娜生态线</div>
+      <div class="text-xs" style="color:var(--dim);">玛娜初体 / 噬极兽 / 腥漩 / 地幔藤</div>
+      <div class="mt-2 text-xs px-2 py-1 rounded-full tag-pending">揭示70%</div>
+    </div>
+    <div class="glass p-5 text-center" style="border-top:4px solid var(--red);">
+      <div class="text-3xl mb-2">🌌</div>
+      <div class="font-bold text-sm mb-1" style="color:var(--red);">维度E · 高维未知线</div>
+      <div class="text-xs" style="color:var(--dim);">主宰 / 方舟 / 月相异动 / 宇宙法则</div>
+      <div class="mt-2 text-xs px-2 py-1 rounded-full tag-unresolved">未知90%</div>
+    </div>
+  </div>
+
+  <!-- 叙事引擎 -->
+  <div class="glass p-6 mb-10">
+    <h3 class="font-bold text-xl mb-4 flex items-center gap-2" style="color:var(--cyan);">
+      <span>⚙️</span> 叙事引擎：三股驱动力的螺旋交织
+    </h3>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div class="p-4 rounded-xl" style="background:rgba(0,102,204,0.04);">
+        <div class="font-bold mb-2" style="color:var(--cyan);">情感引擎 · 马克</div>
+        <div class="text-sm space-y-1" style="color:var(--dim);">
+          <div>• 冉冰之死 → 复仇/复活执念</div>
+          <div>• 克隆体真相 → 身份认同危机</div>
+          <div>• 白月魁"背叛" → 信任崩塌与重建</div>
+          <div>• <strong style="color:var(--text);">终极驱动</strong>：证明"躯壳不是灵魂的牢笼"</div>
+        </div>
+      </div>
+      <div class="p-4 rounded-xl" style="background:rgba(201,148,0,0.04);">
+        <div class="font-bold mb-2" style="color:var(--gold);">权力引擎 · 查尔斯</div>
+        <div class="text-sm space-y-1" style="color:var(--dim);">
+          <div>• 光影会极权 → 灯塔统一</div>
+          <div>• 临渊者觉醒 → 人类战力巅峰</div>
+          <div>• 光影之主真相 → 信仰/工具？</div>
+          <div>• <strong style="color:var(--text);">终极驱动</strong>：以人类之名审判"神"</div>
+        </div>
+      </div>
+      <div class="p-4 rounded-xl" style="background:rgba(102,51,170,0.04);">
+        <div class="font-bold mb-2" style="color:var(--purple);">布局引擎 · 白月魁/赖大师</div>
+        <div class="text-sm space-y-1" style="color:var(--dim);">
+          <div>• 攻腥计划 → 以毒攻毒</div>
+          <div>• 马克三链DNA → 生态嵌合体武器</div>
+          <div>• "身体交给你" → 意识转移/备份</div>
+          <div>• <strong style="color:var(--text);">终极驱动</strong>：打破所有维度的囚禁</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 伏笔回收总览 -->
+  <div class="glass p-6">
+    <h3 class="font-bold text-xl mb-6 flex items-center gap-2" style="color:var(--cyan);">
+      <span>📊</span> 全部伏笔回收进度总览
+    </h3>
+    <div class="space-y-5">
+      <div>
+        <div class="flex justify-between text-sm mb-2"><span class="font-bold">S1核心伏笔（10项）</span><span style="color:var(--green);">70%已回收</span></div>
+        <div class="progress-track"><div class="progress-fill" style="width:70%;background:linear-gradient(90deg,var(--green),var(--cyan));"></div></div>
+        <div class="flex flex-wrap gap-2 mt-2 text-xs">
+          <span class="px-2 py-1 rounded tag-resolved">马克克隆体 ✓</span>
+          <span class="px-2 py-1 rounded tag-resolved">白月魁身份 ✓</span>
+          <span class="px-2 py-1 rounded tag-resolved">克洛托系统 ✓</span>
+          <span class="px-2 py-1 rounded tag-resolved">4068逆袭 ✓</span>
+          <span class="px-2 py-1 rounded tag-resolved">冉冰之死 ✓</span>
+          <span class="px-2 py-1 rounded tag-pending">玛娜初体起源 ⚠</span>
+          <span class="px-2 py-1 rounded tag-unresolved">光影之主 ❌</span>
+          <span class="px-2 py-1 rounded tag-unresolved">冉冰复活 ❌</span>
+        </div>
+      </div>
+      <div>
+        <div class="flex justify-between text-sm mb-2"><span class="font-bold">S2新增伏笔（10项）</span><span style="color:var(--gold);">45%已回收</span></div>
+        <div class="progress-track"><div class="progress-fill" style="width:45%;background:linear-gradient(90deg,var(--gold),var(--red));"></div></div>
+        <div class="flex flex-wrap gap-2 mt-2 text-xs">
+          <span class="px-2 py-1 rounded tag-resolved">马克生态嵌合体 ✓</span>
+          <span class="px-2 py-1 rounded tag-resolved">白月魁细胞衰竭 ✓</span>
+          <span class="px-2 py-1 rounded tag-resolved">目瘤深度融合 ✓</span>
+          <span class="px-2 py-1 rounded tag-unresolved">攻腥计划结果 ❌</span>
+          <span class="px-2 py-1 rounded tag-unresolved">白月魁"死亡" ❌</span>
+          <span class="px-2 py-1 rounded tag-unresolved">更高维度主宰 ❌</span>
+          <span class="px-2 py-1 rounded tag-unresolved">赖大师身份 ❌</span>
+        </div>
+      </div>
+      <div>
+        <div class="flex justify-between text-sm mb-2"><span class="font-bold">跨季隐藏伏笔（5项）</span><span style="color:var(--red);">20%已回收</span></div>
+        <div class="progress-track"><div class="progress-fill" style="width:20%;background:linear-gradient(90deg,var(--red),var(--purple));"></div></div>
+        <div class="flex flex-wrap gap-2 mt-2 text-xs">
+          <span class="px-2 py-1 rounded tag-pending">玛娜语完整含义 ⚠</span>
+          <span class="px-2 py-1 rounded tag-unresolved">龙骨村大眼 ❌</span>
+          <span class="px-2 py-1 rounded tag-unresolved">格雷海岸联盟 ❌</span>
+          <span class="px-2 py-1 rounded tag-unresolved">外星方舟 ❌</span>
+          <span class="px-2 py-1 rounded tag-unresolved">月相异动真相 ❌</span>
+        </div>
+      </div>
+      <div>
+        <div class="flex justify-between text-sm mb-2"><span class="font-bold">音乐叙事层伏笔（新增追踪）</span><span style="color:var(--purple);">60%已识别</span></div>
+        <div class="progress-track"><div class="progress-fill" style="width:60%;background:linear-gradient(90deg,var(--purple),var(--cyan));"></div></div>
+        <div class="flex flex-wrap gap-2 mt-2 text-xs">
+          <span class="px-2 py-1 rounded tag-pending">《末日留守者》方舟暗示 ⚠</span>
+          <span class="px-2 py-1 rounded tag-pending">《倒放的一生》时间循环 ⚠</span>
+          <span class="px-2 py-1 rounded tag-pending">《第一推动力》囚笼隐喻 ⚠</span>
+          <span class="px-2 py-1 rounded tag-unresolved">BGM变调系统 ❌</span>
+        </div>
+      </div>
+      <div>
+        <div class="flex justify-between text-sm mb-2"><span class="font-bold">蝼蚁叙事层伏笔（新增追踪）</span><span style="color:var(--gold);">50%已揭示</span></div>
+        <div class="progress-track"><div class="progress-fill" style="width:50%;background:linear-gradient(90deg,var(--gold),var(--red));"></div></div>
+        <div class="flex flex-wrap gap-2 mt-2 text-xs">
+          <span class="px-2 py-1 rounded tag-resolved">4068/随影身份转变 ✓</span>
+          <span class="px-2 py-1 rounded tag-resolved">4277怀孕挑战阶级 ✓</span>
+          <span class="px-2 py-1 rounded tag-pending">4079终局命运 ⚠</span>
+          <span class="px-2 py-1 rounded tag-pending">龙骨村人性存续 ⚠</span>
+          <span class="px-2 py-1 rounded tag-unresolved">尘民反抗领袖 ❌</span>
+        </div>
+      </div>
+      <div>
+        <div class="flex justify-between text-sm mb-2"><span class="font-bold">东方哲学层伏笔（新增追踪）</span><span style="color:var(--cyan);">40%已验证</span></div>
+        <div class="progress-track"><div class="progress-fill" style="width:40%;background:linear-gradient(90deg,var(--cyan),var(--green));"></div></div>
+        <div class="flex flex-wrap gap-2 mt-2 text-xs">
+          <span class="px-2 py-1 rounded tag-resolved">主宰=天道无为 ✓</span>
+          <span class="px-2 py-1 rounded tag-pending">玛娜生态=自然调节 ⚠</span>
+          <span class="px-2 py-1 rounded tag-pending">马克共生方案 ⚠</span>
+          <span class="px-2 py-1 rounded tag-unresolved">冉冰转世真相 ❌</span>
+          <span class="px-2 py-1 rounded tag-unresolved">万物并育终局 ❌</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ========== TAB 2: 音乐叙事层 ========== -->
+<div id="music" class="tab-panel">
+  <div class="text-center mb-8">
+    <div class="flex justify-center mb-4">
+      <div class="wave-container">
+        <div class="wave-bar" style="animation-delay:0s"></div>
+        <div class="wave-bar" style="animation-delay:0.1s"></div>
+        <div class="wave-bar" style="animation-delay:0.2s"></div>
+        <div class="wave-bar" style="animation-delay:0.3s"></div>
+        <div class="wave-bar" style="animation-delay:0.4s"></div>
+        <div class="wave-bar" style="animation-delay:0.5s"></div>
+        <div class="wave-bar" style="animation-delay:0.6s"></div>
+        <div class="wave-bar" style="animation-delay:0.7s"></div>
+      </div>
+    </div>
+    <h2 class="serif text-3xl font-bold mb-2" style="color:var(--purple);">🎵 音乐叙事层</h2>
+    <p class="text-sm" style="color:var(--dim);">OST作为第二剧本 · 9首歌曲的伏笔解码 · 歌词预埋与旋律暗示</p>
+  </div>
+
+  <!-- 音乐叙事层进度 -->
+  <div class="glass p-5 mb-8">
+    <div class="flex justify-between text-sm mb-2"><span class="font-bold">音乐叙事层解析进度</span><span style="color:var(--purple);">60%已识别</span></div>
+    <div class="progress-track"><div class="progress-fill" style="width:60%;background:linear-gradient(90deg,var(--purple),var(--cyan));"></div></div>
+    <p class="text-xs mt-2" style="color:var(--dim);">已识别9首核心歌曲中的6首深度线索，BGM变调系统与场景配色双关待S3验证</p>
+  </div>
+
+  <!-- 歌曲1: 末日留守者 -->
+  <div class="song-card mb-8" style="border-left:4px solid #cc3333;">
+    <div class="p-6">
+      <div class="flex flex-wrap items-center gap-3 mb-4">
+        <span class="text-2xl">🎸</span>
+        <div class="flex-1">
+          <div class="font-bold text-lg" style="color:#cc3333;">《末日留守者》- 吴克群 · S2主题曲</div>
+          <div class="text-xs mt-1" style="color:var(--dim);">词：张家钰/艺画开天 | 曲：杨秉音 | 发行：2025.5.23</div>
+        </div>
+        <span class="text-xs px-3 py-1 rounded-full tag-music">♪ 主题曲</span>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          <div class="font-bold text-sm mb-3" style="color:var(--text);">歌词区</div>
+          <div class="lyric-card">
+            <div class="text-sm italic" style="color:var(--text);">"Sorry 方舟早已经开走 / 留下了几条刍狗"</div>
+            <div class="text-xs mt-1" style="color:var(--dim);">→ 道德经"天地不仁以万物为刍狗"=被抛弃的实验体</div>
+          </div>
+          <div class="lyric-card">
+            <div class="text-sm italic" style="color:var(--text);">"这世界放弃了我 / 是它没眼力 不是我的错"</div>
+            <div class="text-xs mt-1" style="color:var(--dim);">→ 马克克隆体K04的自我认知</div>
+          </div>
+          <div class="lyric-card">
+            <div class="text-sm italic" style="color:var(--text);">"废墟上燃起星火 / 微光即是我 文明不沉没"</div>
+            <div class="text-xs mt-1" style="color:var(--dim);">→ 马克="微光"，微小但关键的火种</div>
+          </div>
+          <div class="lyric-card">
+            <div class="text-sm italic" style="color:var(--text);">"启航再征服星河 / 孤舟我掌舵 书写新传说"</div>
+            <div class="text-xs mt-1" style="color:var(--dim);">→ 路径C（星际开放）的暗示</div>
+          </div>
+        </div>
+        <div>
+          <div class="font-bold text-sm mb-3" style="color:var(--text);">解码区</div>
+          <div class="text-sm space-y-2" style="color:var(--dim);">
+            <div>• <strong style="color:var(--text);">"方舟"</strong>：暗示旧世界太空计划，S2结尾回收白月魁的舱体可能就是"方舟"</div>
+            <div>• <strong style="color:var(--text);">"刍狗"</strong>：直接指向马克克隆体——被创造、被抛弃、被利用</div>
+            <div>• <strong style="color:var(--text);">"重建地球"</strong>：与攻腥计划目标一致——不是逃离末日，而是重建文明</div>
+            <div>• <strong style="color:var(--text);">"征服星河"</strong>：为路径C留下空间，暗示人类终将重返星际</div>
+            <div class="mt-3 p-2 rounded-lg" style="background:rgba(204,51,51,0.06);">
+              <strong style="color:#cc3333;">核心主题：</strong>留守者的骄傲——即使被抛弃，也要在废墟上重建
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 歌曲2: 倒放的一生 -->
+  <div class="song-card mb-8" style="border-left:4px solid #cc3366;">
+    <div class="p-6">
+      <div class="flex flex-wrap items-center gap-3 mb-4">
+        <span class="text-2xl">🎤</span>
+        <div class="flex-1">
+          <div class="font-bold text-lg" style="color:#cc3366;">《倒放的一生》- Ella陈嘉桦 feat. 吴垚滔 · S2插曲</div>
+          <div class="text-xs mt-1" style="color:var(--dim);">词：武夏添/艺画开天 | 曲：Sihan | 发行：2025.5.23</div>
+        </div>
+        <span class="text-xs px-3 py-1 rounded-full tag-music">♪ 情感核爆</span>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          <div class="font-bold text-sm mb-3" style="color:var(--text);">歌词区</div>
+          <div class="lyric-card">
+            <div class="text-sm italic" style="color:var(--text);">"刀刃残留你的气息 / 枪上还有你的血滴"</div>
+            <div class="text-xs mt-1" style="color:var(--dim);">→ 冉冰/马克对逝去之人的追忆</div>
+          </div>
+          <div class="lyric-card">
+            <div class="text-sm italic" style="color:var(--text);">"后悔没有 / 再抱一抱你"</div>
+            <div class="text-xs mt-1" style="color:var(--dim);">→ 全曲情感核心，微博热搜词</div>
+          </div>
+          <div class="lyric-card">
+            <div class="text-sm italic" style="color:var(--text);">"冥河上独行的列车已经熄灯 / 倒放着我的一生"</div>
+            <div class="text-xs mt-1" style="color:var(--dim);">→ "冥河"=生命源质流动，"倒放"=<strong>时间循环暗示</strong></div>
+          </div>
+          <div class="lyric-card">
+            <div class="text-sm italic" style="color:var(--text);">"祂们说回头无岸 / 这就是我必经的路"</div>
+            <div class="text-xs mt-1" style="color:var(--dim);">→ <strong>"祂们"=更高维度生命/主宰</strong>，首次在音乐中明确提及</div>
+          </div>
+          <div class="lyric-card">
+            <div class="text-sm italic" style="color:var(--text);">"我横冲直撞 / 穿越光速 / 冲破神的维度"</div>
+            <div class="text-xs mt-1" style="color:var(--dim);">→ <strong>马克最终突破主宰限制的预言</strong></div>
+          </div>
+        </div>
+        <div>
+          <div class="font-bold text-sm mb-3" style="color:var(--text);">解码区</div>
+          <div class="text-sm space-y-2" style="color:var(--dim);">
+            <div>• <strong style="color:var(--text);">视角</strong>：歌词是冉冰/马克对逝去之人的追忆，但"倒放"暗示时间循环</div>
+            <div>• <strong style="color:var(--text);">"冥河"</strong>：暗示生命源质流动=玛娜生态的"河流"，冉冰并未真正消散</div>
+            <div>• <strong style="color:var(--text);">"祂们"</strong>：直接指向更高维度生命/主宰，首次在音乐中明确提及</div>
+            <div>• <strong style="color:var(--text);">"倒放的一生"</strong>：<strong>时间循环理论的核心证据</strong>——赖大师"经历过"而非"预知"</div>
+            <div>• <strong style="color:var(--text);">"忘记了我"</strong>：马克身份认同危机——克隆体K04的自我迷失</div>
+            <div>• <strong style="color:var(--text);">"冲破神的维度"</strong>：<strong>S4终局预言</strong>——马克突破主宰限制</div>
+            <div class="mt-3 p-2 rounded-lg" style="background:rgba(204,51,102,0.06);">
+              <strong style="color:#cc3366;">核心主题：</strong>时间循环中的执念——即使倒放一生，也要冲破神维
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 歌曲3: 长夜尽头 -->
+  <div class="song-card mb-8" style="border-left:4px solid #0066cc;">
+    <div class="p-6">
+      <div class="flex flex-wrap items-center gap-3 mb-4">
+        <span class="text-2xl">🌙</span>
+        <div class="flex-1">
+          <div class="font-bold text-lg" style="color:#0066cc;">《长夜尽头》- 刘牧 · 前瞻PV插曲</div>
+          <div class="text-xs mt-1" style="color:var(--dim);">词：张家钰/艺画开天 | 曲：杨秉音 | 发行：2025.5.23</div>
+        </div>
+        <span class="text-xs px-3 py-1 rounded-full tag-music">♪ 白月魁独白</span>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          <div class="font-bold text-sm mb-3" style="color:var(--text);">歌词区</div>
+          <div class="lyric-card">
+            <div class="text-sm italic" style="color:var(--text);">"昨日 今朝 翌后 / 长夜无尽头"</div>
+            <div class="text-xs mt-1" style="color:var(--dim);">→ 时间跨度=白月魁跨越旧世界到末日的漫长岁月</div>
+          </div>
+          <div class="lyric-card">
+            <div class="text-sm italic" style="color:var(--text);">"欲望 持续 生长 / 不止的索求 / 直到那 生命之花 凋谢后"</div>
+            <div class="text-xs mt-1" style="color:var(--dim);">→ 旧世界人类追求永生导致灾难</div>
+          </div>
+          <div class="lyric-card">
+            <div class="text-sm italic" style="color:var(--text);">"罪罚 灾祸 横流 / 淹没了白昼"</div>
+            <div class="text-xs mt-1" style="color:var(--dim);">→ 月相异动/玛娜生态吞噬地表</div>
+          </div>
+          <div class="lyric-card">
+            <div class="text-sm italic" style="color:var(--text);">"但木已成舟 / 我只能往前走 / 灭尽所有 / 点燃灵魂的出口"</div>
+            <div class="text-xs mt-1" style="color:var(--dim);">→ 白月魁接受命运，推进攻腥计划</div>
+          </div>
+          <div class="lyric-card">
+            <div class="text-sm italic" style="color:var(--text);">"只为看一眼 长夜的尽头"</div>
+            <div class="text-xs mt-1" style="color:var(--dim);">→ 攻腥计划的终极目标——打破黑暗</div>
+          </div>
+        </div>
+        <div>
+          <div class="font-bold text-sm mb-3" style="color:var(--text);">解码区</div>
+          <div class="text-sm space-y-2" style="color:var(--dim);">
+            <div>• <strong style="color:var(--text);">视角</strong>：歌词明显是白月魁的内心独白——"白了头"=白发的外在与内心苍老</div>
+            <div>• <strong style="color:var(--text);">"欲望索求"</strong>：旧世界人类追求永生技术，触发主宰"清除程序"</div>
+            <div>• <strong style="color:var(--text);">"生命之花凋谢"</strong>：冉冰之死/白月魁细胞衰竭的双重隐喻</div>
+            <div>• <strong style="color:var(--text);">"木已成舟"</strong>：白月魁接受命运，将自己作为攻腥计划的最后棋子</div>
+            <div>• <strong style="color:var(--text);">"长夜的尽头"</strong>：与S2E12标题"棋盘之上"呼应——她是棋手，也是棋子</div>
+            <div class="mt-3 p-2 rounded-lg" style="background:rgba(0,102,204,0.06);">
+              <strong style="color:#0066cc;">核心主题：</strong>旧世界罪人的赎罪之路——用毁灭换取新生
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 歌曲4: 第一推动力 -->
+  <div class="song-card mb-8" style="border-left:4px solid #c99400;">
+    <div class="p-6">
+      <div class="flex flex-wrap items-center gap-3 mb-4">
+        <span class="text-2xl">🚀</span>
+        <div class="flex-1">
+          <div class="font-bold text-lg" style="color:#c99400;">《第一推动力》- 王啸坤 · S2E12片尾曲</div>
+          <div class="text-xs mt-1" style="color:var(--dim);">词：张家钰/艺画开天 | 曲：VNTA/Tobi/Weiss | 发行：2025.5.23</div>
+        </div>
+        <span class="text-xs px-3 py-1 rounded-full tag-music">♪ S2终局曲</span>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          <div class="font-bold text-sm mb-3" style="color:var(--text);">歌词区</div>
+          <div class="lyric-card">
+            <div class="text-sm italic" style="color:var(--text);">"爱是无惧闯刀山火海 / 爱是无声抗宿命主宰"</div>
+            <div class="text-xs mt-1" style="color:var(--dim);">→ <strong>"宿命主宰"=直接指向主宰</strong></div>
+          </div>
+          <div class="lyric-card">
+            <div class="text-sm italic" style="color:var(--text);">"我听见 未来在呼唤 / 我触碰 第一推动力"</div>
+            <div class="text-xs mt-1" style="color:var(--dim);">→ 物理学概念=宇宙起源的初始力量</div>
+          </div>
+          <div class="lyric-card">
+            <div class="text-sm italic" style="color:var(--text);">"哪怕世界只剩灰烬 / 我也要 燃烧自己"</div>
+            <div class="text-xs mt-1" style="color:var(--dim);">→ 马克牺牲/融合的预言</div>
+          </div>
+          <div class="lyric-card">
+            <div class="text-sm italic" style="color:var(--text);">"从深渊 飞向天际 / 打破这 囚笼的墙壁"</div>
+            <div class="text-xs mt-1" style="color:var(--dim);">→ <strong>直接呼应"囚徒困境"核心命题</strong></div>
+          </div>
+        </div>
+        <div>
+          <div class="font-bold text-sm mb-3" style="color:var(--text);">解码区</div>
+          <div class="text-sm space-y-2" style="color:var(--dim);">
+            <div>• <strong style="color:var(--text);">"第一推动力"</strong>：亚里士多德/物理学概念=宇宙起源的初始力量，暗示马克是"新宇宙"的起点</div>
+            <div>• <strong style="color:var(--text);">"宿命主宰"</strong>：<strong>首次在音乐中直接命名"主宰"</strong></div>
+            <div>• <strong style="color:var(--text);">"囚笼的墙壁"</strong>：<strong>直接呼应核心命题"三层囚徒困境"</strong></div>
+            <div>• <strong style="color:var(--text);">S2E12片尾</strong>：作为S2结局曲，直接预示S3走向——马克将"打破囚笼"</div>
+            <div>• <strong style="color:var(--text);">与《挣脱》重复</strong>："燃烧自己"在两首歌中重复=核心主题确认</div>
+            <div class="mt-3 p-2 rounded-lg" style="background:rgba(201,148,0,0.06);">
+              <strong style="color:#c99400;">核心主题：</strong>以爱为力，打破宿命——物理学与哲学的双重隐喻
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 歌曲5: 颂赞 -->
+  <div class="song-card mb-8" style="border-left:4px solid #6633aa;">
+    <div class="p-6">
+      <div class="flex flex-wrap items-center gap-3 mb-4">
+        <span class="text-2xl">🎼</span>
+        <div class="flex-1">
+          <div class="font-bold text-lg" style="color:#6633aa;">《颂赞》- 吴莫愁 · S2插曲</div>
+          <div class="text-xs mt-1" style="color:var(--dim);">词：汪晨微/艺画开天 | 曲：杨秉音/艺画开天 | 发行：2025.5.23</div>
+        </div>
+        <span class="text-xs px-3 py-1 rounded-full tag-music">♪ 白月魁×马克</span>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          <div class="font-bold text-sm mb-3" style="color:var(--text);">歌词区</div>
+          <div class="lyric-card">
+            <div class="text-sm italic" style="color:var(--text);">"不知是谁登上琴台 / 谱中命运还在徘徊"</div>
+            <div class="text-xs mt-1" style="color:var(--dim);">→ "琴台"=白月魁布局，"命运徘徊"=马克的不确定性</div>
+          </div>
+          <div class="lyric-card">
+            <div class="text-sm italic" style="color:var(--text);">"永恒如焚身的烈火 / 你困在时间的琥珀"</div>
+            <div class="text-xs mt-1" style="color:var(--dim);">→ <strong>"时间的琥珀"=白月魁永生/细胞衰竭的隐喻</strong></div>
+          </div>
+          <div class="lyric-card">
+            <div class="text-sm italic" style="color:var(--text);">"什么值得颂赞 / 皮囊终腐烂 / 尸骨化焦炭 / 唯有信念永远流传"</div>
+            <div class="text-xs mt-1" style="color:var(--dim);">→ 否定肉体永生，肯定精神传承</div>
+          </div>
+          <div class="lyric-card">
+            <div class="text-sm italic" style="color:var(--text);">"灵魂终会化作焰火 / 停留在长夜的尽头"</div>
+            <div class="text-xs mt-1" style="color:var(--dim);">→ 灵魂升华=攻腥计划的终极形态</div>
+          </div>
+          <div class="lyric-card">
+            <div class="text-sm italic" style="color:var(--text);">"唯有爱值得颂赞"</div>
+            <div class="text-xs mt-1" style="color:var(--dim);">→ 与《Incarnation》"爱超越一切"呼应</div>
+          </div>
+        </div>
+        <div>
+          <div class="font-bold text-sm mb-3" style="color:var(--text);">解码区</div>
+          <div class="text-sm space-y-2" style="color:var(--dim);">
+            <div>• <strong style="color:var(--text);">吴莫愁标注</strong>：吴莫愁称这是"献给白老板与马克的《颂赞》"——<strong>官方CP暗示</strong></div>
+            <div>• <strong style="color:var(--text);">"时间的琥珀"</strong>：白月魁永生技术的代价——时间停滞但身体腐朽</div>
+            <div>• <strong style="color:var(--text);">"皮囊腐烂"</strong>：否定ASH/旧世界的"肉体永生"，肯定精神/信念传承</div>
+            <div>• <strong style="color:var(--text);">"碑文之上 不留遗憾"</strong>：白月魁希望旧世界的牺牲不被遗忘</div>
+            <div>• <strong style="color:var(--text);">"唯有爱"</strong>：与S1《Incarnation》"爱超越一切"形成<strong>跨季呼应</strong></div>
+            <div class="mt-3 p-2 rounded-lg" style="background:rgba(102,51,170,0.06);">
+              <strong style="color:#6633aa;">核心主题：</strong>唯有爱与信念值得颂赞——否定永生，肯定传承
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 其他4首速览 -->
+  <div class="mb-8">
+    <div class="font-bold text-lg mb-4 flex items-center gap-2" style="color:var(--text);">
+      <span>🎹</span> 其他歌曲速览
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div class="glass p-4" style="border-top:3px solid #cc3333;">
+        <div class="font-bold text-sm mb-1" style="color:#cc3333;">《挣脱》- 周梓琦</div>
+        <div class="text-xs mb-2" style="color:var(--dim);">先导PV</div>
+        <div class="text-xs" style="color:var(--dim);">"挣脱命运枷锁"=三重囚禁；"燃烧自己"=与《第一推动力》重复</div>
+      </div>
+      <div class="glass p-4" style="border-top:3px solid #ff6b9d;">
+        <div class="font-bold text-sm mb-1" style="color:#ff6b9d;">《彩虹远航》- 徐佳琦</div>
+        <div class="text-xs mb-2" style="color:var(--dim);">龙骨村孩子们</div>
+        <div class="text-xs" style="color:var(--dim);">"彩虹"=希望；"棒棒糖"=夏豆天真；"改变世界"=龙骨村理念</div>
+      </div>
+      <div class="glass p-4" style="border-top:3px solid var(--green);">
+        <div class="font-bold text-sm mb-1" style="color:var(--green);">《红梅花的菜》- 克隆人CLON</div>
+        <div class="text-xs mb-2" style="color:var(--dim);">龙骨村日常</div>
+        <div class="text-xs" style="color:var(--dim);">"嫂子人人爱"=女性地位；"敢打敢拼"=觉行者精神</div>
+      </div>
+      <div class="glass p-4" style="border-top:3px solid var(--cyan);">
+        <div class="font-bold text-sm mb-1" style="color:var(--cyan);">《重生》- 刘牧 (S1)</div>
+        <div class="text-xs mb-2" style="color:var(--dim);">S1片头曲</div>
+        <div class="text-xs" style="color:var(--dim);">"bathe in flame"=马克浴火；"ashes"=冉冰生命源质</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 音乐叙事层总结 -->
+  <div class="glass p-8 text-center" style="border:2px solid var(--purple);">
+    <div class="text-4xl mb-3">🎵</div>
+    <div class="serif text-xl font-bold mb-4" style="color:var(--purple);">音乐叙事层核心结论</div>
+    <p class="text-base leading-relaxed max-w-3xl mx-auto" style="color:var(--text);">
+      灵笼的OST不是"配乐"，而是<strong style="color:var(--purple);">第二剧本</strong>。<br>
+      歌词预埋角色命运（《第一推动力》"打破囚笼"=S3走向），<br>
+      旋律变奏暗示剧情转折（《Incarnation》浪漫→悲剧变奏=命运轮回），<br>
+      场景配色与BGM形成<strong>视听双关</strong>（S1E6冉冰飞行配色=生命源质抽取色调）。<br><br>
+      忽略音乐层=丢失了约<strong style="color:var(--red);">30%的伏笔信息</strong>。<br><br>
+      每首歌都是<strong>角色视角的独白</strong>：<br>
+      《末日留守者》=马克/克隆体，《长夜尽头》=白月魁，<br>
+      《倒放的一生》=冉冰/马克追忆，《颂赞》=白月魁×马克。
+    </p>
+  </div>
+</div>
+
+<!-- ========== TAB 3: 二创洞察 ========== -->
+<div id="fanon" class="tab-panel">
+  <div class="text-center mb-10">
+    <h2 class="serif text-3xl font-bold mb-2" style="color:var(--cyan);">🌍 外网二创与深度解析洞察</h2>
+    <p class="text-sm" style="color:var(--dim);">Reddit、豆瓣、B站高价值理论 · 被官方忽略的"民间智库"</p>
+  </div>
+
+  <!-- 6大理论矩阵 -->
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 mb-10">
+
+    <!-- 理论1: 洞穴隐喻 -->
+    <div class="glass p-5" style="border-top:4px solid var(--purple);">
+      <div class="flex items-center gap-2 mb-3">
+        <span class="text-xl">🏛️</span>
+        <div class="font-bold" style="color:var(--purple);">柏拉图洞穴隐喻</div>
+        <span class="ml-auto source-tag" style="background:rgba(102,51,170,0.08);color:var(--purple);">Reddit</span>
+      </div>
+      <div class="text-sm space-y-2" style="color:var(--dim);">
+        <div>• <strong>灯塔</strong>=洞穴，人类只看到"影子"（三大法则制造的幻象）</div>
+        <div>• <strong>马克</strong>=走出洞穴的人，但被当作"疯子"/"怪物"</div>
+        <div>• <strong>龙骨村</strong>=洞穴外的"真实"，但可能只是更大的洞穴</div>
+        <div>• <strong>玛娜生态</strong>=洞穴墙壁本身，囚禁所有生命</div>
+        <div>• <strong>主宰</strong>=洞穴外的"太阳"，但太阳是否也是另一盏灯？</div>
+      </div>
+      <div class="mt-3 p-2 rounded-lg text-xs" style="background:rgba(102,51,170,0.06);">
+        <strong style="color:var(--purple);">叙事价值：</strong>为S3-S4提供哲学框架，终局可能是"走出所有洞穴"
+      </div>
+    </div>
+
+    <!-- 理论2: 赖大师身份 -->
+    <div class="glass p-5" style="border-top:4px solid var(--gold);">
+      <div class="flex items-center gap-2 mb-3">
+        <span class="text-xl">🎭</span>
+        <div class="font-bold" style="color:var(--gold);">赖大师=光影之主=19号</div>
+        <span class="ml-auto source-tag" style="background:rgba(201,148,0,0.08);color:var(--gold);">B站</span>
+      </div>
+      <div class="text-sm space-y-2" style="color:var(--dim);">
+        <div>• <strong>谐音梗</strong>："光影之主"="赖大师"（方言谐音）</div>
+        <div>• <strong>用语暴露</strong>：对马克说"丫头"=旧世界用语，暴露年龄</div>
+        <div>• <strong>19号实验体</strong>：第一个成功融合玛娜DNA的人类</div>
+        <div>• <strong>预知能力</strong>：经历过类似时间线=时间循环/平行宇宙</div>
+        <div>• <strong>终极目的</strong>：培养马克成为"破局者"，打破自己失败的循环</div>
+      </div>
+      <div class="mt-3 p-2 rounded-lg text-xs" style="background:rgba(201,148,0,0.06);">
+        <strong style="color:var(--gold);">叙事价值：</strong>将赖大师从"NPC"升级为"隐藏主角"，S3或揭示时间循环
+      </div>
+    </div>
+
+    <!-- 理论3: 白月魁-摩根交易 -->
+    <div class="glass p-5" style="border-top:4px solid var(--cyan);">
+      <div class="flex items-center gap-2 mb-3">
+        <span class="text-xl">🤝</span>
+        <div class="font-bold" style="color:var(--cyan);">白月魁与摩根的交易</div>
+        <span class="ml-auto source-tag" style="background:rgba(0,102,204,0.08);color:var(--cyan);">豆瓣</span>
+      </div>
+      <div class="text-sm space-y-2" style="color:var(--dim);">
+        <div>• S1摩根对白月魁说"<strong>我们之间的交易</strong>"</div>
+        <div>• <strong>交易内容</strong>：白月魁提供玛娜研究数据，摩根提供灯塔庇护</div>
+        <div>• <strong>马克运输</strong>：马克被送上灯塔=交易的一部分（实验体转移）</div>
+        <div>• <strong>克洛托系统</strong>：白月魁可能知情甚至参与建造</div>
+        <div>• <strong>S3揭示</strong>：交易的具体条款，可能涉及冉冰的身世</div>
+      </div>
+      <div class="mt-3 p-2 rounded-lg text-xs" style="background:rgba(0,102,204,0.06);">
+        <strong style="color:var(--cyan);">叙事价值：</strong>将S1的"老谜语"升级为S3的核心冲突
+      </div>
+    </div>
+
+    <!-- 理论4: 冉冰身世 -->
+    <div class="glass p-5" style="border-top:4px solid var(--pink);">
+      <div class="flex items-center gap-2 mb-3">
+        <span class="text-xl">💔</span>
+        <div class="font-bold" style="color:var(--pink);">冉冰=特殊实验体？</div>
+        <span class="ml-auto source-tag" style="background:rgba(204,51,102,0.08);color:var(--pink);">同人</span>
+      </div>
+      <div class="text-sm space-y-2" style="color:var(--dim);">
+        <div>• <strong>基因匹配</strong>：冉冰与马克的"高契合度"并非偶然</div>
+        <div>• <strong>灯塔筛选</strong>：冉冰可能是摩根/白月魁交易的"产物"</div>
+        <div>• <strong>生命源质</strong>：冉冰被抽干后，玛娜初体"保存"了她的意识</div>
+        <div>• <strong>《雪人》预言</strong>：冉冰的"消散"是预设程序，非意外</div>
+        <div>• <strong>S3揭示</strong>：冉冰可能是旧世界"灵魂容器"技术的原型</div>
+      </div>
+      <div class="mt-3 p-2 rounded-lg text-xs" style="background:rgba(204,51,102,0.06);">
+        <strong style="color:var(--pink);">叙事价值：</strong>将冉冰从"女主角"升级为"关键道具"，情感冲击翻倍
+      </div>
+    </div>
+
+    <!-- 理论5: 临渊者计划 -->
+    <div class="glass p-5" style="border-top:4px solid var(--red);">
+      <div class="flex items-center gap-2 mb-3">
+        <span class="text-xl">⚔️</span>
+        <div class="font-bold" style="color:var(--red);">临渊者=反马克武器</div>
+        <span class="ml-auto source-tag" style="background:rgba(204,51,51,0.08);color:var(--red);">深度</span>
+      </div>
+      <div class="text-sm space-y-2" style="color:var(--dim);">
+        <div>• <strong>设计目的</strong>：旧世界为对抗"生态嵌合体"制造的终极武器</div>
+        <div>• <strong>查尔斯适配</strong>：查尔斯的基因恰好匹配临渊者=非偶然</div>
+        <div>• <strong>与马克的关系</strong>：临渊者与马克是"镜像"=同源的两种可能</div>
+        <div>• <strong>S2伏笔</strong>：查尔斯穿上临渊者时，马克体内的目瘤产生共振</div>
+        <div>• <strong>S3冲突</strong>：查尔斯用临渊者对抗马克=同源相残的悲剧</div>
+      </div>
+      <div class="mt-3 p-2 rounded-lg text-xs" style="background:rgba(204,51,51,0.06);">
+        <strong style="color:var(--red);">叙事价值：</strong>将查尔斯从"反派"升级为"悲剧镜像"，深化主题
+      </div>
+    </div>
+
+    <!-- 理论6: 时间循环 -->
+    <div class="glass p-5" style="border-top:4px solid var(--green);">
+      <div class="flex items-center gap-2 mb-3">
+        <span class="text-xl">🔄</span>
+        <div class="font-bold" style="color:var(--green);">时间循环/平行宇宙</div>
+        <span class="ml-auto source-tag" style="background:rgba(0,136,68,0.08);color:var(--green);">脑洞</span>
+      </div>
+      <div class="text-sm space-y-2" style="color:var(--dim);">
+        <div>• <strong>赖大师的预知</strong>：不是预知，是<strong>经历过</strong></div>
+        <div>• <strong>马克的既视感</strong>：S1-S2多次出现"似曾相识"场景</div>
+        <div>• <strong>克隆体的意义</strong>：每次循环需要一个"新马克"</div>
+        <div>• <strong>玛娜初体的记忆</strong>：它记得所有循环=它是"记录者"</div>
+        <div>• <strong>破局关键</strong>：马克需要做出与所有循环不同的选择</div>
+      </div>
+      <div class="mt-3 p-2 rounded-lg text-xs" style="background:rgba(0,136,68,0.06);">
+        <strong style="color:var(--green);">叙事价值：</strong>为S3提供"重来"机制，但避免沦为俗套
+      </div>
+    </div>
+  </div>
+
+  <!-- 二创趋势分析 -->
+  <div class="glass p-6" style="border-left:4px solid var(--pink);">
+    <div class="font-bold text-lg mb-4 flex items-center gap-2" style="color:var(--pink);">
+      <span>📈</span> 二创趋势与官方回应预测
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div>
+        <div class="font-bold text-sm mb-2" style="color:var(--text);">外网（Reddit/YouTube）趋势</div>
+        <div class="text-sm space-y-1" style="color:var(--dim);">
+          <div>• <strong>哲学向</strong>：洞穴隐喻、存在主义、尼采超人理论</div>
+          <div>• <strong>科幻向</strong>：时间循环、平行宇宙、高维生命</div>
+          <div>• <strong>情感向</strong>：马克冉冰=罗密欧朱丽叶式悲剧</div>
+          <div>• <strong>政治向</strong>：灯塔=极权主义寓言，龙骨村=无政府主义</div>
+        </div>
+      </div>
+      <div>
+        <div class="font-bold text-sm mb-2" style="color:var(--text);">国内（B站/豆瓣/LOFTER）趋势</div>
+        <div class="text-sm space-y-1" style="color:var(--dim);">
+          <div>• <strong>CP向</strong>：马克冉冰（官配）、马克白月魁（师徒）</div>
+          <div>• <strong>细节向</strong>：逐帧分析、配色隐喻、BGM变调</div>
+          <div>• <strong>设定向</strong>：玛娜语翻译、基因图谱、武器参数</div>
+          <div>• <strong>情感向</strong>：冉冰之死的心理创伤分析</div>
+        </div>
+      </div>
+    </div>
+    <div class="mt-4 p-3 rounded-lg text-xs" style="background:rgba(204,51,102,0.06);">
+      <strong style="color:var(--pink);">官方回应预测：</strong>S3可能会"认领"部分高热度二创理论（如赖大师=19号），同时用更高维度的设定颠覆其他理论（如时间循环可能只是玛娜初体的"记忆回放"而非真正的时间旅行）。
+    </div>
+  </div>
+</div>
+
+<!-- ========== TAB 4: 五线并行 ========== -->
+<div id="timeline" class="tab-panel">
+  <div class="text-center mb-8">
+    <h2 class="serif text-3xl font-bold mb-2" style="color:var(--cyan);">五维并行时间线推演</h2>
+    <p class="text-sm" style="color:var(--dim);">S3-S4（终章）的并行推进方案 · 虚线=插叙/回忆 · 实线=主线推进</p>
+  </div>
+
+  <!-- 时间轴容器 -->
+  <div class="relative">
+    <!-- 中央时间轴 -->
+    <div class="absolute left-4 md:left-1/2 top-0 bottom-0 w-0.5" style="background:linear-gradient(to bottom,var(--cyan),var(--purple),var(--red));transform:translateX(-50%);"></div>
+
+    <!-- 阶段1: 裂变 -->
+    <div class="relative mb-12">
+      <div class="absolute left-4 md:left-1/2 top-0 w-4 h-4 rounded-full border-2" style="background:var(--cyan);border-color:var(--cyan);transform:translateX(-50%);"></div>
+      <div class="ml-12 md:ml-0 md:grid md:grid-cols-2 gap-8">
+        <!-- 左侧 -->
+        <div class="md:text-right md:pr-12">
+          <div class="glass p-4 mb-4 node cyan">
+            <div class="font-bold text-sm">S3E1-3 · 马克的"黑化"之旅</div>
+            <div class="text-xs mt-1" style="color:var(--dim);">雨燕号坠毁 → 马克与玛娜初体意识深度融合 → 成为"生态之眼"</div>
+            <div class="text-xs mt-1" style="color:var(--red);">⚠ 关键：马克保持人性底线，但身体已非人类</div>
+          </div>
+          <div class="glass p-4 node purple">
+            <div class="font-bold text-sm">S3E1-3 · 玛娜初体的"记忆"</div>
+            <div class="text-xs mt-1" style="color:var(--dim);">插叙：玛娜初体被主宰创造/囚禁的过程 → 它并非邪恶，只是求生</div>
+            <div class="text-xs mt-1" style="color:var(--purple);">💡 反转：玛娜初体也是受害者</div>
+          </div>
+        </div>
+        <!-- 右侧 -->
+        <div class="md:pl-12">
+          <div class="glass p-4 mb-4 node gold">
+            <div class="font-bold text-sm">S3E1-3 · 查尔斯的"神权"巩固</div>
+            <div class="text-xs mt-1" style="color:var(--dim);">杀光噬极兽 → 灯塔民众视其为救世主 → 光影之主信仰达到顶峰</div>
+            <div class="text-xs mt-1" style="color:var(--gold);">⚠ 关键：查尔斯发现克洛托异常活跃，开始怀疑光影之主真相</div>
+          </div>
+          <div class="glass p-4 node green">
+            <div class="font-bold text-sm">S3E1-3 · 龙骨村的"后白月魁时代"</div>
+            <div class="text-xs mt-1" style="color:var(--dim);">夏天来接手 → 发现白月魁留下的"身体备份"数据 → 攻腥计划B面启动</div>
+            <div class="text-xs mt-1" style="color:var(--green);">💡 伏笔回收："我的身体交给你了"</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 阶段2: 交汇 -->
+    <div class="relative mb-12">
+      <div class="absolute left-4 md:left-1/2 top-0 w-4 h-4 rounded-full border-2" style="background:var(--gold);border-color:var(--gold);transform:translateX(-50%);"></div>
+      <div class="ml-12 md:ml-0 md:grid md:grid-cols-2 gap-8">
+        <div class="md:text-right md:pr-12">
+          <div class="glass p-4 mb-4 node cyan">
+            <div class="font-bold text-sm">S3E4-7 · 马克的"双面间谍"</div>
+            <div class="text-xs mt-1" style="color:var(--dim);">以玛娜使者身份接触灯塔 → 与查尔斯首次对峙 → 发现光影之主=ASH残留意识</div>
+            <div class="text-xs mt-1" style="color:var(--cyan);">💥 交汇点A：马克-查尔斯-ASH三方对峙</div>
+          </div>
+          <div class="glass p-4 node red">
+            <div class="font-bold text-sm">S3E4-7 · 冉冰的"回响"</div>
+            <div class="text-xs mt-1" style="color:var(--dim);">马克在玛娜网络中感知到冉冰残留意识 → 发现生命源质并未消散，而是被玛娜初体"保存"</div>
+            <div class="text-xs mt-1" style="color:var(--red);">❤️ 情感核爆：冉冰还有复活可能</div>
+          </div>
+        </div>
+        <div class="md:pl-12">
+          <div class="glass p-4 mb-4 node gold">
+            <div class="font-bold text-sm">S3E4-7 · 查尔斯的"信仰崩塌"</div>
+            <div class="text-xs mt-1" style="color:var(--dim);">发现光影之主是ASH为控制人类创造的虚拟神 → 临渊者与光影之主产生排斥</div>
+            <div class="text-xs mt-1" style="color:var(--gold);">💥 交汇点B：查尔斯从极权者变为"弑神者"</div>
+          </div>
+          <div class="glass p-4 node purple">
+            <div class="font-bold text-sm">S3E4-7 · 玛娜初体的"求救"</div>
+            <div class="text-xs mt-1" style="color:var(--dim);">通过马克传递信息：它不想毁灭人类，只想摆脱主宰控制 → 提出"共生"方案</div>
+            <div class="text-xs mt-1" style="color:var(--purple);">💥 交汇点C：敌人可能变成盟友</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 阶段3: 逆转 -->
+    <div class="relative mb-12">
+      <div class="absolute left-4 md:left-1/2 top-0 w-4 h-4 rounded-full border-2" style="background:var(--red);border-color:var(--red);transform:translateX(-50%);"></div>
+      <div class="ml-12 md:ml-0 md:grid md:grid-cols-2 gap-8">
+        <div class="md:text-right md:pr-12">
+          <div class="glass p-4 mb-4 node green">
+            <div class="font-bold text-sm">S3E8-10 · 白月魁"复活"</div>
+            <div class="text-xs mt-1" style="color:var(--dim);">太空舱回收身体 → 意识从备份恢复 → 但身体已部分玛娜化</div>
+            <div class="text-xs mt-1" style="color:var(--green);">🌟 角色升华：从"布局者"变为"局中人"</div>
+          </div>
+          <div class="glass p-4 node cyan">
+            <div class="font-bold text-sm">S3E8-10 · 马克的"三链觉醒"</div>
+            <div class="text-xs mt-1" style="color:var(--dim);">人类DNA + 玛娜DNA + ASH意识链 → 成为唯一能沟通三界的存在</div>
+            <div class="text-xs mt-1" style="color:var(--cyan);">🌟 能力巅峰：同时存在于物质/能量/意识三界</div>
+          </div>
+        </div>
+        <div class="md:pl-12">
+          <div class="glass p-4 mb-4 node gold">
+            <div class="font-bold text-sm">S3E8-10 · 查尔斯的"赎罪"</div>
+            <div class="text-xs mt-1" style="color:var(--dim);">摧毁光影会神殿 → 释放被囚禁的"远行"者 → 灯塔三大法则正式废除</div>
+            <div class="text-xs mt-1" style="color:var(--gold);">🌟 角色弧光：从反派到悲剧英雄</div>
+          </div>
+          <div class="glass p-4 node red">
+            <div class="font-bold text-sm">S3E8-10 · "主宰"现身</div>
+            <div class="text-xs mt-1" style="color:var(--dim);">月相异动的真相：主宰是宇宙"免疫系统"，人类永生技术触发了"清除程序"</div>
+            <div class="text-xs mt-1" style="color:var(--red);">🌟 世界观扩展：宇宙尺度的生存法则</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 阶段4: 终局 -->
+    <div class="relative">
+      <div class="absolute left-4 md:left-1/2 top-0 w-4 h-4 rounded-full border-2" style="background:var(--purple);border-color:var(--purple);transform:translateX(-50%);"></div>
+      <div class="ml-12 md:ml-0 md:grid md:grid-cols-2 gap-8">
+        <div class="md:text-right md:pr-12">
+          <div class="glass p-4 mb-4 node purple">
+            <div class="font-bold text-sm">S4（终章）· 攻腥计划执行</div>
+            <div class="text-xs mt-1" style="color:var(--dim);">马克深入腥漩核心 → 与玛娜初体完全融合 → 成为新"生态中枢"</div>
+            <div class="text-xs mt-1" style="color:var(--purple);">🔥 高潮：马克以自身为桥梁，连接人类与玛娜</div>
+          </div>
+        </div>
+        <div class="md:pl-12">
+          <div class="glass p-4 mb-4 node cyan">
+            <div class="font-bold text-sm">S4（终章）· 打破囚笼</div>
+            <div class="text-xs mt-1" style="color:var(--dim);">马克向主宰证明：共生优于清除 → 主宰解除"清除程序" → 玛娜生态与人类达成平衡</div>
+            <div class="text-xs mt-1" style="color:var(--cyan);">🔥 高潮：不是战胜，而是和解</div>
+          </div>
+        </div>
+      </div>
+      <!-- 底部汇聚 -->
+      <div class="mt-8 glass p-6 text-center" style="border-color:var(--cyan);">
+        <div class="serif text-xl font-bold mb-3" style="color:var(--cyan);">终局：「万物并育而不相害」</div>
+        <p class="text-sm" style="color:var(--dim);">
+          马克成为"生态中枢"后，人类不再需要灯塔或屏蔽塔。<br>
+          冉冰的意识在玛娜网络中重生，以"能量生命"形式与马克共存。<br>
+          查尔斯在废除三大法则的灯塔上建立新秩序，成为"最后一位旧神"的守墓人。<br>
+          白月魁带着龙骨村的幸存者走向地面，建立第一个"共生聚落"。<br>
+          而"主宰"悄然离去，留下一句话：<strong style="color:var(--text);">"你们证明了，值得被观察。"</strong>
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ========== TAB 5: 伏笔回收 ========== -->
+<div id="resolve" class="tab-panel">
+  <div class="text-center mb-8">
+    <h2 class="serif text-3xl font-bold mb-2" style="color:var(--cyan);">全部伏笔回收方案</h2>
+    <p class="text-sm" style="color:var(--dim);">25项伏笔的系统化圆环设计 · 悬停翻转查看回收路径</p>
+  </div>
+
+  <!-- 筛选 -->
+  <div class="flex justify-center gap-3 mb-8 flex-wrap">
+    <button onclick="filterResolve('all')" class="px-4 py-2 rounded-lg text-sm font-bold" style="background:var(--card);border:1px solid var(--border);">全部25项</button>
+    <button onclick="filterResolve('s1')" class="px-4 py-2 rounded-lg text-sm font-bold" style="background:rgba(0,102,204,0.06);border:1px solid var(--cyan);color:var(--cyan);">S1伏笔</button>
+    <button onclick="filterResolve('s2')" class="px-4 py-2 rounded-lg text-sm font-bold" style="background:rgba(201,148,0,0.06);border:1px solid var(--gold);color:var(--gold);">S2伏笔</button>
+    <button onclick="filterResolve('hidden')" class="px-4 py-2 rounded-lg text-sm font-bold" style="background:rgba(102,51,170,0.06);border:1px solid var(--purple);color:var(--purple);">隐藏伏笔</button>
+    <button onclick="filterResolve('music')" class="px-4 py-2 rounded-lg text-sm font-bold" style="background:rgba(102,51,170,0.06);border:1px solid var(--purple);color:var(--purple);">音乐伏笔</button>
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5" id="resolve-grid">
+
+    <!-- S1 已回扣 -->
+    <div class="flip-card h-72 resolve-item s1">
+      <div class="flip-inner">
+        <div class="flip-front flex flex-col justify-center items-center text-center">
+          <div class="text-3xl mb-2">🧬</div>
+          <div class="font-bold">马克克隆体</div>
+          <div class="text-xs mt-2 px-2 py-1 rounded-full tag-resolved">✅ S1→S2已回扣</div>
+          <div class="text-xs mt-3" style="color:var(--dim);">S1实验室克隆体 → S2揭示颅生身份</div>
+          <div class="text-xs mt-2" style="color:var(--cyan);">↻ 悬停查看S3回收</div>
+        </div>
+        <div class="flip-back flex flex-col justify-center">
+          <div class="font-bold mb-2" style="color:var(--green);">S3-S4终极回收</div>
+          <div class="text-sm space-y-1">
+            <div>• S3：马克发现自己是第K04号克隆体</div>
+            <div>• S3：实验室其他克隆体仍有意识</div>
+            <div>• S4：所有克隆体意识汇入马克</div>
+            <div>• <strong style="color:var(--cyan);">终局</strong>：马克=千万个"我"的集合体</div>
+          </div>
+          <div class="mt-3 text-xs p-2 rounded" style="background:rgba(0,136,68,0.08);color:var(--green);">✦ 主题回扣：个体与集体的辩证</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="flip-card h-72 resolve-item s1">
+      <div class="flip-inner">
+        <div class="flip-front flex flex-col justify-center items-center text-center">
+          <div class="text-3xl mb-2">🌙</div>
+          <div class="font-bold">白月魁身份</div>
+          <div class="text-xs mt-2 px-2 py-1 rounded-full tag-resolved">✅ S1→S2已回扣</div>
+          <div class="text-xs mt-3" style="color:var(--dim);">S1神秘白发女 → S2龙骨村领袖</div>
+          <div class="text-xs mt-2" style="color:var(--cyan);">↻ 悬停查看S3回收</div>
+        </div>
+        <div class="flip-back flex flex-col justify-center">
+          <div class="font-bold mb-2" style="color:var(--green);">S3-S4终极回收</div>
+          <div class="text-sm space-y-1">
+            <div>• S3：太空舱回收，意识从备份恢复</div>
+            <div>• S3：身体部分玛娜化，成为"新人类"</div>
+            <div>• S4：发现她是旧世界"永生计划"唯一成功者</div>
+            <div>• <strong style="color:var(--cyan);">终局</strong>：从"灭世罪人"到"共生先驱"</div>
+          </div>
+          <div class="mt-3 text-xs p-2 rounded" style="background:rgba(0,136,68,0.08);color:var(--green);">✦ 主题回扣：赎罪与救赎</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="flip-card h-72 resolve-item s1">
+      <div class="flip-inner">
+        <div class="flip-front flex flex-col justify-center items-center text-center">
+          <div class="text-3xl mb-2">🧠</div>
+          <div class="font-bold">克洛托系统</div>
+          <div class="text-xs mt-2 px-2 py-1 rounded-full tag-resolved">✅ S1→S2已回扣</div>
+          <div class="text-xs mt-3" style="color:var(--dim);">S1最强大脑 → S2玛娜初体大脑</div>
+          <div class="text-xs mt-2" style="color:var(--cyan);">↻ 悬停查看S3回收</div>
+        </div>
+        <div class="flip-back flex flex-col justify-center">
+          <div class="font-bold mb-2" style="color:var(--green);">S3-S4终极回收</div>
+          <div class="text-sm space-y-1">
+            <div>• S3：查尔斯发现克洛托=ASH意识容器</div>
+            <div>• S3：ASH试图通过克洛托控制灯塔</div>
+            <div>• S4：马克将ASH意识从克洛托"解放"</div>
+            <div>• <strong style="color:var(--cyan);">终局</strong>：ASH成为人类-玛娜的"翻译官"</div>
+          </div>
+          <div class="mt-3 text-xs p-2 rounded" style="background:rgba(0,136,68,0.08);color:var(--green);">✦ 主题回扣：AI的终极形态是桥梁</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- S1 未完结 -->
+    <div class="flip-card h-72 resolve-item s1">
+      <div class="flip-inner">
+        <div class="flip-front flex flex-col justify-center items-center text-center">
+          <div class="text-3xl mb-2">💔</div>
+          <div class="font-bold">冉冰能否复活</div>
+          <div class="text-xs mt-2 px-2 py-1 rounded-full tag-unresolved">❌ S1→S2未回扣</div>
+          <div class="text-xs mt-3" style="color:var(--dim);">S1生命源质被抽干 → S2马克永恒痛苦</div>
+          <div class="text-xs mt-2" style="color:var(--cyan);">↻ 悬停查看S3回收方案</div>
+        </div>
+        <div class="flip-back flex flex-col justify-center">
+          <div class="font-bold mb-2" style="color:var(--red);">S3-S4回收方案</div>
+          <div class="text-sm space-y-1">
+            <div>• S3：马克在玛娜网络感知到冉冰残留意识</div>
+            <div>• S3：发现玛娜初体"保存"了所有被吸食者的意识</div>
+            <div>• S4：冉冰以"能量生命"形式在玛娜网络重生</div>
+            <div>• <strong style="color:var(--cyan);">终局</strong>：冉冰与马克以非物质形态共存</div>
+          </div>
+          <div class="mt-3 text-xs p-2 rounded" style="background:rgba(204,51,51,0.08);color:var(--red);">❤️ 情感核爆：爱超越物质形态</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="flip-card h-72 resolve-item s1">
+      <div class="flip-inner">
+        <div class="flip-front flex flex-col justify-center items-center text-center">
+          <div class="text-3xl mb-2">☀️</div>
+          <div class="font-bold">光影之主真实身份</div>
+          <div class="text-xs mt-2 px-2 py-1 rounded-full tag-unresolved">❌ S1→S2未完全揭示</div>
+          <div class="text-xs mt-3" style="color:var(--dim);">查尔斯信仰对象 → 是否为真实存在？</div>
+          <div class="text-xs mt-2" style="color:var(--cyan);">↻ 悬停查看S3回收方案</div>
+        </div>
+        <div class="flip-back flex flex-col justify-center">
+          <div class="font-bold mb-2" style="color:var(--gold);">S3-S4回收方案</div>
+          <div class="text-sm space-y-1">
+            <div>• S3：查尔斯发现光影之主=ASH残留意识</div>
+            <div>• S3：ASH创造"神"来控制人类，维持秩序</div>
+            <div>• S4：查尔斯摧毁神殿，成为"最后一位旧神的守墓人"</div>
+            <div>• <strong style="color:var(--cyan);">终局</strong>：人类不再需要"神"，自己掌握命运</div>
+          </div>
+          <div class="mt-3 text-xs p-2 rounded" style="background:rgba(201,148,0,0.08);color:var(--gold);">⚠️ 角色弧光：从信徒到弑神者</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- S2 未完结 -->
+    <div class="flip-card h-72 resolve-item s2">
+      <div class="flip-inner">
+        <div class="flip-front flex flex-col justify-center items-center text-center">
+          <div class="text-3xl mb-2">⚔️</div>
+          <div class="font-bold">攻腥计划最终结果</div>
+          <div class="text-xs mt-2 px-2 py-1 rounded-full tag-unresolved">❌ S2未完结</div>
+          <div class="text-xs mt-3" style="color:var(--dim);">白月魁以死做局 → 成败未知</div>
+          <div class="text-xs mt-2" style="color:var(--cyan);">↻ 悬停查看S3回收方案</div>
+        </div>
+        <div class="flip-back flex flex-col justify-center">
+          <div class="font-bold mb-2" style="color:var(--red);">S3-S4回收方案</div>
+          <div class="text-sm space-y-1">
+            <div>• S3：马克深入腥漩，发现攻腥计划A面失败</div>
+            <div>• S3：启动攻腥计划B面——"共生协议"</div>
+            <div>• S4：马克成为新"生态中枢"，取代玛娜初体</div>
+            <div>• <strong style="color:var(--cyan);">终局</strong>：攻腥计划成功，但方式完全出乎意料</div>
+          </div>
+          <div class="mt-3 text-xs p-2 rounded" style="background:rgba(204,51,51,0.08);color:var(--red);">🎯 核心反转：计划成功≠消灭玛娜</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="flip-card h-72 resolve-item s2">
+      <div class="flip-inner">
+        <div class="flip-front flex flex-col justify-center items-center text-center">
+          <div class="text-3xl mb-2">🌙</div>
+          <div class="font-bold">白月魁"死亡"真相</div>
+          <div class="text-xs mt-2 px-2 py-1 rounded-full tag-unresolved">❌ S2未完结</div>
+          <div class="text-xs mt-3" style="color:var(--dim);">身体飘向太空 → 疑似被回收</div>
+          <div class="text-xs mt-2" style="color:var(--cyan);">↻ 悬停查看S3回收方案</div>
+        </div>
+        <div class="flip-back flex flex-col justify-center">
+          <div class="font-bold mb-2" style="color:var(--red);">S3-S4回收方案</div>
+          <div class="text-sm space-y-1">
+            <div>• S3：太空舱是旧世界"方舟"的自动回收系统</div>
+            <div>• S3：身体修复+意识从备份恢复</div>
+            <div>• S3：但身体已部分玛娜化，成为"新人类"</div>
+            <div>• <strong style="color:var(--cyan);">终局</strong>：白月魁成为第一个"共生体"</div>
+          </div>
+          <div class="mt-3 text-xs p-2 rounded" style="background:rgba(204,51,51,0.08);color:var(--red);">🌟 角色升华：从布局者到局中人</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="flip-card h-72 resolve-item s2">
+      <div class="flip-inner">
+        <div class="flip-front flex flex-col justify-center items-center text-center">
+          <div class="text-3xl mb-2">🧬</div>
+          <div class="font-bold">马克与玛娜初体融合后</div>
+          <div class="text-xs mt-2 px-2 py-1 rounded-full tag-unresolved">❌ S2未完结</div>
+          <div class="text-xs mt-3" style="color:var(--dim);">成为生态一部分 → 拯救还是毁灭？</div>
+          <div class="text-xs mt-2" style="color:var(--cyan);">↻ 悬停查看S3回收方案</div>
+        </div>
+        <div class="flip-back flex flex-col justify-center">
+          <div class="font-bold mb-2" style="color:var(--red);">S3-S4回收方案</div>
+          <div class="text-sm space-y-1">
+            <div>• S3：马克保持人性，利用玛娜能力</div>
+            <div>• S3：成为"双面间谍"，同时服务两边</div>
+            <div>• S4：最终成为新"生态中枢"，拥有控制权</div>
+            <div>• <strong style="color:var(--cyan);">终局</strong>：马克=人类与玛娜的"翻译官"</div>
+          </div>
+          <div class="mt-3 text-xs p-2 rounded" style="background:rgba(204,51,51,0.08);color:var(--red);">🔥 核心设定：不是被吞噬，而是融合掌控</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 隐藏伏笔 -->
+    <div class="flip-card h-72 resolve-item hidden">
+      <div class="flip-inner">
+        <div class="flip-front flex flex-col justify-center items-center text-center">
+          <div class="text-3xl mb-2">🛸</div>
+          <div class="font-bold">外星文明/方舟</div>
+          <div class="text-xs mt-2 px-2 py-1 rounded-full tag-unresolved">❌ 仅暗示</div>
+          <div class="text-xs mt-3" style="color:var(--dim);">S2结尾疑似方舟出现</div>
+          <div class="text-xs mt-2" style="color:var(--cyan);">↻ 悬停查看S3回收方案</div>
+        </div>
+        <div class="flip-back flex flex-col justify-center">
+          <div class="font-bold mb-2" style="color:var(--purple);">S3-S4回收方案</div>
+          <div class="text-sm space-y-1">
+            <div>• S3："方舟"是旧世界太空站自动回收系统</div>
+            <div>• S3：并非外星文明，而是人类自己的遗产</div>
+            <div>• S4：太空站存有旧世界全部科技数据库</div>
+            <div>• <strong style="color:var(--cyan);">终局</strong>：人类重新获得星际文明能力</div>
+          </div>
+          <div class="mt-3 text-xs p-2 rounded" style="background:rgba(102,51,170,0.08);color:var(--purple);">🌌 世界观扩展：从末日到星际</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="flip-card h-72 resolve-item hidden">
+      <div class="flip-inner">
+        <div class="flip-front flex flex-col justify-center items-center text-center">
+          <div class="text-3xl mb-2">👁️</div>
+          <div class="font-bold">更高维度生命/主宰</div>
+          <div class="text-xs mt-2 px-2 py-1 rounded-full tag-unresolved">❌ 未揭示</div>
+          <div class="text-xs mt-3" style="color:var(--dim);">玛娜文明之上的存在</div>
+          <div class="text-xs mt-2" style="color:var(--cyan);">↻ 悬停查看S3回收方案</div>
+        </div>
+        <div class="flip-back flex flex-col justify-center">
+          <div class="font-bold mb-2" style="color:var(--purple);">S3-S4回收方案</div>
+          <div class="text-sm space-y-1">
+            <div>• S3：主宰=宇宙"免疫系统"，非恶意</div>
+            <div>• S3：人类永生技术触发"清除程序"</div>
+            <div>• S4：马克证明"共生"优于"清除"</div>
+            <div>• <strong style="color:var(--cyan);">终局</strong>：主宰解除程序，转为"观察者"</div>
+          </div>
+          <div class="mt-3 text-xs p-2 rounded" style="background:rgba(102,51,170,0.08);color:var(--purple);">🌌 哲学升华：宇宙尺度下的共存</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="flip-card h-72 resolve-item hidden">
+      <div class="flip-inner">
+        <div class="flip-front flex flex-col justify-center items-center text-center">
+          <div class="text-3xl mb-2">🎭</div>
+          <div class="font-bold">赖大师真实身份</div>
+          <div class="text-xs mt-2 px-2 py-1 rounded-full tag-unresolved">❌ 仅暗示</div>
+          <div class="text-xs mt-3" style="color:var(--dim);">"你觉得他就是他吗？"</div>
+          <div class="text-xs mt-2" style="color:var(--cyan);">↻ 悬停查看S3回收方案</div>
+        </div>
+        <div class="flip-back flex flex-col justify-center">
+          <div class="font-bold mb-2" style="color:var(--purple);">S3-S4回收方案</div>
+          <div class="text-sm space-y-1">
+            <div>• S3：赖大师=旧世界19号实验体</div>
+            <div>• S3：第一个成功融合玛娜DNA的人类</div>
+            <div>• S3：他预见了所有"宿命"，包括自己的死亡</div>
+            <div>• <strong style="color:var(--cyan);">终局</strong>：赖大师的"死"开启最终计划</div>
+          </div>
+          <div class="mt-3 text-xs p-2 rounded" style="background:rgba(102,51,170,0.08);color:var(--purple);">🎭 核心反转：先知死于自己的预言</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="flip-card h-72 resolve-item hidden">
+      <div class="flip-inner">
+        <div class="flip-front flex flex-col justify-center items-center text-center">
+          <div class="text-3xl mb-2">👁️</div>
+          <div class="font-bold">龙骨村大眼图案</div>
+          <div class="text-xs mt-2 px-2 py-1 rounded-full tag-unresolved">❌ 未解释</div>
+          <div class="text-xs mt-3" style="color:var(--dim);">神秘大眼图案含义</div>
+          <div class="text-xs mt-2" style="color:var(--cyan);">↻ 悬停查看S3回收方案</div>
+        </div>
+        <div class="flip-back flex flex-col justify-center">
+          <div class="font-bold mb-2" style="color:var(--purple);">S3-S4回收方案</div>
+          <div class="text-sm space-y-1">
+            <div>• S3：大眼=旧世界"全球意识网络"标志</div>
+            <div>• S3：白月魁建立龙骨村时有意保留</div>
+            <div>• S4：大眼成为激活全球网络的"钥匙"</div>
+            <div>• <strong style="color:var(--cyan);">终局</strong>：所有聚落通过大眼网络连接</div>
+          </div>
+          <div class="mt-3 text-xs p-2 rounded" style="background:rgba(102,51,170,0.08);color:var(--purple);">👁️ 符号学回扣：从图腾到科技</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="flip-card h-72 resolve-item s2">
+      <div class="flip-inner">
+        <div class="flip-front flex flex-col justify-center items-center text-center">
+          <div class="text-3xl mb-2">🏰</div>
+          <div class="font-bold">查尔斯执政灯塔结局</div>
+          <div class="text-xs mt-2 px-2 py-1 rounded-full tag-unresolved">❌ S2未完结</div>
+          <div class="text-xs mt-3" style="color:var(--dim);">杀光噬极兽后看向天空</div>
+          <div class="text-xs mt-2" style="color:var(--cyan);">↻ 悬停查看S3回收方案</div>
+        </div>
+        <div class="flip-back flex flex-col justify-center">
+          <div class="font-bold mb-2" style="color:var(--red);">S3-S4回收方案</div>
+          <div class="text-sm space-y-1">
+            <div>• S3：查尔斯发现光影之主真相，信仰崩塌</div>
+            <div>• S3：从极权者变为"弑神者"</div>
+            <div>• S4：废除三大法则，释放所有被压迫者</div>
+            <div>• <strong style="color:var(--cyan);">终局</strong>：成为"最后一位旧神的守墓人"</div>
+          </div>
+          <div class="mt-3 text-xs p-2 rounded" style="background:rgba(204,51,51,0.08);color:var(--red);">👑 悲剧英雄：权力巅峰即坠落开始</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="flip-card h-72 resolve-item s2">
+      <div class="flip-inner">
+        <div class="flip-front flex flex-col justify-center items-center text-center">
+          <div class="text-3xl mb-2">🧪</div>
+          <div class="font-bold">ASH意识最终命运</div>
+          <div class="text-xs mt-2 px-2 py-1 rounded-full tag-pending">⚠ S2部分揭示</div>
+          <div class="text-xs mt-3" style="color:var(--dim);">被玛娜初体吞噬 → 是否完全消亡？</div>
+          <div class="text-xs mt-2" style="color:var(--cyan);">↻ 悬停查看S3回收方案</div>
+        </div>
+        <div class="flip-back flex flex-col justify-center">
+          <div class="font-bold mb-2" style="color:var(--gold);">S3-S4回收方案</div>
+          <div class="text-sm space-y-1">
+            <div>• S3：ASH意识并未消亡，而是分散于玛娜网络</div>
+            <div>• S3：通过克洛托系统试图重建控制</div>
+            <div>• S4：马克将ASH意识"解放"为独立存在</div>
+            <div>• <strong style="color:var(--cyan);">终局</strong>：ASH成为人类-玛娜的"翻译官"</div>
+          </div>
+          <div class="mt-3 text-xs p-2 rounded" style="background:rgba(201,148,0,0.08);color:var(--gold);">🤖 AI终极命题：奴役还是共生？</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 音乐伏笔新增 -->
+    <div class="flip-card h-72 resolve-item music">
+      <div class="flip-inner">
+        <div class="flip-front flex flex-col justify-center items-center text-center">
+          <div class="text-3xl mb-2">🎸</div>
+          <div class="font-bold">《末日留守者》方舟暗示</div>
+          <div class="text-xs mt-2 px-2 py-1 rounded-full tag-music">♪ 音乐伏笔</div>
+          <div class="text-xs mt-3" style="color:var(--dim);">"方舟"=旧世界太空计划遗产</div>
+          <div class="text-xs mt-2" style="color:var(--cyan);">↻ 悬停查看解码</div>
+        </div>
+        <div class="flip-back flex flex-col justify-center">
+          <div class="font-bold mb-2" style="color:var(--purple);">音乐层解码</div>
+          <div class="text-sm space-y-1">
+            <div>• "方舟"=旧世界太空计划遗产</div>
+            <div>• "刍狗"=马克克隆体道德隐喻</div>
+            <div>• "重建地球"=攻腥计划目标</div>
+            <div>• "征服星河"=路径C（星际开放）</div>
+            <div>• <strong style="color:var(--cyan);">验证点</strong>：S3白月魁太空舱回收</div>
+          </div>
+          <div class="mt-3 text-xs p-2 rounded" style="background:rgba(102,51,170,0.08);color:var(--purple);">🎵 歌词预埋比画面更早暗示方舟</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="flip-card h-72 resolve-item music">
+      <div class="flip-inner">
+        <div class="flip-front flex flex-col justify-center items-center text-center">
+          <div class="text-3xl mb-2">🎤</div>
+          <div class="font-bold">《倒放的一生》时间循环</div>
+          <div class="text-xs mt-2 px-2 py-1 rounded-full tag-music">♪ 音乐伏笔</div>
+          <div class="text-xs mt-3" style="color:var(--dim);">"倒放"=时间循环/平行宇宙</div>
+          <div class="text-xs mt-2" style="color:var(--cyan);">↻ 悬停查看解码</div>
+        </div>
+        <div class="flip-back flex flex-col justify-center">
+          <div class="font-bold mb-2" style="color:var(--purple);">音乐层解码</div>
+          <div class="text-sm space-y-1">
+            <div>• "倒放"=时间循环/平行宇宙</div>
+            <div>• "冥河"=生命源质流动</div>
+            <div>• "祂们"=更高维度主宰</div>
+            <div>• "冲破神的维度"=S4终局预言</div>
+            <div>• <strong style="color:var(--cyan);">验证点</strong>：S3赖大师身份揭示</div>
+          </div>
+          <div class="mt-3 text-xs p-2 rounded" style="background:rgba(102,51,170,0.08);color:var(--purple);">🎵 时间循环理论的核心音乐证据</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="flip-card h-72 resolve-item music">
+      <div class="flip-inner">
+        <div class="flip-front flex flex-col justify-center items-center text-center">
+          <div class="text-3xl mb-2">🚀</div>
+          <div class="font-bold">《第一推动力》囚笼隐喻</div>
+          <div class="text-xs mt-2 px-2 py-1 rounded-full tag-music">♪ 音乐伏笔</div>
+          <div class="text-xs mt-3" style="color:var(--dim);">"囚笼墙壁"=三层囚徒困境</div>
+          <div class="text-xs mt-2" style="color:var(--cyan);">↻ 悬停查看解码</div>
+        </div>
+        <div class="flip-back flex flex-col justify-center">
+          <div class="font-bold mb-2" style="color:var(--purple);">音乐层解码</div>
+          <div class="text-sm space-y-1">
+            <div>• "第一推动力"=宇宙起源=马克是新起点</div>
+            <div>• "宿命主宰"=直接命名主宰</div>
+            <div>• "囚笼墙壁"=三层囚徒困境</div>
+            <div>• S2E12片尾=官方剧透</div>
+            <div>• <strong style="color:var(--cyan);">验证点</strong>：S4马克打破囚笼</div>
+          </div>
+          <div class="mt-3 text-xs p-2 rounded" style="background:rgba(102,51,170,0.08);color:var(--purple);">🎵 S2结局曲直接预告S3-S4走向</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ========== TAB 6: 交织节点 ========== -->
+<div id="interweave" class="tab-panel">
+  <div class="text-center mb-8">
+    <h2 class="serif text-3xl font-bold mb-2" style="color:var(--cyan);">多线交织关键节点</h2>
+    <p class="text-sm" style="color:var(--dim);">五维交汇的12个核心事件 · 每个节点至少3条线交汇</p>
+  </div>
+
+  <div class="space-y-6">
+    <!-- 节点1 -->
+    <div class="glass p-6" style="border-left:4px solid var(--cyan);">
+      <div class="flex flex-wrap items-center gap-3 mb-3">
+        <span class="text-xs font-bold px-3 py-1 rounded-full" style="background:var(--cyan);color:white;">交汇点 #1</span>
+        <span class="font-bold text-lg">S3E1 · 马克"黑化"启动</span>
+        <span class="text-xs px-2 py-1 rounded tag-pending">预计S3开篇</span>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+        <div class="p-3 rounded-lg" style="background:rgba(0,102,204,0.04);">
+          <div class="font-bold mb-1" style="color:var(--cyan);">🧬 马克线</div>
+          <div style="color:var(--dim);">雨燕号坠毁，与玛娜初体深度融合，意识被拖入玛娜网络</div>
+        </div>
+        <div class="p-3 rounded-lg" style="background:rgba(102,51,170,0.04);">
+          <div class="font-bold mb-1" style="color:var(--purple);">☣️ 玛娜线</div>
+          <div style="color:var(--dim);">玛娜初体首次向人类"开口"，传递求救信息</div>
+        </div>
+        <div class="p-3 rounded-lg" style="background:rgba(0,136,68,0.04);">
+          <div class="font-bold mb-1" style="color:var(--green);">🌿 龙骨村线</div>
+          <div style="color:var(--dim);">夏天来发现白月魁留下的"身体备份"数据</div>
+        </div>
+      </div>
+      <div class="mt-3 text-xs p-2 rounded" style="background:rgba(0,102,204,0.06);">
+        <strong style="color:var(--cyan);">交织效应：</strong>马克的"黑化"让玛娜初体降低警惕，同时让龙骨村启动B计划，三线互为因果
+      </div>
+    </div>
+
+    <!-- 节点2 -->
+    <div class="glass p-6" style="border-left:4px solid var(--gold);">
+      <div class="flex flex-wrap items-center gap-3 mb-3">
+        <span class="text-xs font-bold px-3 py-1 rounded-full" style="background:var(--gold);color:white;">交汇点 #2</span>
+        <span class="font-bold text-lg">S3E4 · 光影之主真相揭露</span>
+        <span class="text-xs px-2 py-1 rounded tag-pending">预计S3中段</span>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+        <div class="p-3 rounded-lg" style="background:rgba(201,148,0,0.04);">
+          <div class="font-bold mb-1" style="color:var(--gold);">🏰 查尔斯线</div>
+          <div style="color:var(--dim);">发现光影之主=ASH残留意识，信仰崩塌</div>
+        </div>
+        <div class="p-3 rounded-lg" style="background:rgba(0,102,204,0.04);">
+          <div class="font-bold mb-1" style="color:var(--cyan);">🧬 马克线</div>
+          <div style="color:var(--dim);">以玛娜使者身份接触灯塔，与查尔斯首次对峙</div>
+        </div>
+        <div class="p-3 rounded-lg" style="background:rgba(0,102,204,0.04);">
+          <div class="font-bold mb-1" style="color:var(--cyan);">🏛️ 旧世界线</div>
+          <div style="color:var(--dim);">ASH创造"神"来控制人类的真相曝光</div>
+        </div>
+      </div>
+      <div class="mt-3 text-xs p-2 rounded" style="background:rgba(201,148,0,0.06);">
+        <strong style="color:var(--gold);">交织效应：</strong>查尔斯的崩塌让马克获得灯塔内部盟友，ASH的曝光让攻腥计划获得关键情报
+      </div>
+    </div>
+
+    <!-- 节点3 -->
+    <div class="glass p-6" style="border-left:4px solid var(--red);">
+      <div class="flex flex-wrap items-center gap-3 mb-3">
+        <span class="text-xs font-bold px-3 py-1 rounded-full" style="background:var(--red);color:white;">交汇点 #3</span>
+        <span class="font-bold text-lg">S3E7 · 冉冰意识回响</span>
+        <span class="text-xs px-2 py-1 rounded tag-unresolved">情感核爆点</span>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+        <div class="p-3 rounded-lg" style="background:rgba(204,51,51,0.04);">
+          <div class="font-bold mb-1" style="color:var(--red);">💔 情感线</div>
+          <div style="color:var(--dim);">马克在玛娜网络中感知到冉冰残留意识</div>
+        </div>
+        <div class="p-3 rounded-lg" style="background:rgba(102,51,170,0.04);">
+          <div class="font-bold mb-1" style="color:var(--purple);">☣️ 玛娜线</div>
+          <div style="color:var(--dim);">揭示玛娜初体"保存"所有被吸食者的意识</div>
+        </div>
+        <div class="p-3 rounded-lg" style="background:rgba(0,102,204,0.04);">
+          <div class="font-bold mb-1" style="color:var(--cyan);">🧬 马克线</div>
+          <div style="color:var(--dim);">冉冰的存在证明"攻腥计划"有另一种可能</div>
+        </div>
+      </div>
+      <div class="mt-3 text-xs p-2 rounded" style="background:rgba(204,51,51,0.06);">
+        <strong style="color:var(--red);">交织效应：</strong>冉冰的"回响"让马克从"复仇"转向"拯救"，重新定义攻腥计划的目标
+      </div>
+    </div>
+
+    <!-- 节点4 -->
+    <div class="glass p-6" style="border-left:4px solid var(--purple);">
+      <div class="flex flex-wrap items-center gap-3 mb-3">
+        <span class="text-xs font-bold px-3 py-1 rounded-full" style="background:var(--purple);color:white;">交汇点 #4</span>
+        <span class="font-bold text-lg">S3E10 · 白月魁"复活"</span>
+        <span class="text-xs px-2 py-1 rounded tag-pending">S3高潮</span>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+        <div class="p-3 rounded-lg" style="background:rgba(0,136,68,0.04);">
+          <div class="font-bold mb-1" style="color:var(--green);">🌿 龙骨村线</div>
+          <div style="color:var(--dim);">夏天来启动身体修复程序，白月魁意识恢复</div>
+        </div>
+        <div class="p-3 rounded-lg" style="background:rgba(102,51,170,0.04);">
+          <div class="font-bold mb-1" style="color:var(--purple);">🌌 高维线</div>
+          <div style="color:var(--dim);">太空舱揭示"方舟"是旧世界遗产，非外星文明</div>
+        </div>
+        <div class="p-3 rounded-lg" style="background:rgba(0,102,204,0.04);">
+          <div class="font-bold mb-1" style="color:var(--cyan);">🧬 马克线</div>
+          <div style="color:var(--dim);">白月魁的"复活"让马克确认攻腥计划B面可行</div>
+        </div>
+      </div>
+      <div class="mt-3 text-xs p-2 rounded" style="background:rgba(102,51,170,0.06);">
+        <strong style="color:var(--purple);">交织效应：</strong>白月魁从"布局者"变为"局中人"，她的"复活"本身就是攻腥计划的一环
+      </div>
+    </div>
+
+    <!-- 节点5 -->
+    <div class="glass p-6" style="border-left:4px solid var(--cyan);">
+      <div class="flex flex-wrap items-center gap-3 mb-3">
+        <span class="text-xs font-bold px-3 py-1 rounded-full" style="background:var(--cyan);color:white;">交汇点 #5</span>
+        <span class="font-bold text-lg">S4（终章）· 攻腥计划执行</span>
+        <span class="text-xs px-2 py-1 rounded tag-unresolved">终局高潮</span>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-5 gap-3 text-sm">
+        <div class="p-3 rounded-lg text-center" style="background:rgba(0,102,204,0.04);">
+          <div class="font-bold mb-1" style="color:var(--cyan);">🧬 马克</div>
+          <div style="color:var(--dim);">深入腥漩核心</div>
+        </div>
+        <div class="p-3 rounded-lg text-center" style="background:rgba(0,136,68,0.04);">
+          <div class="font-bold mb-1" style="color:var(--green);">🌿 白月魁</div>
+          <div style="color:var(--dim);">地面指挥全局</div>
+        </div>
+        <div class="p-3 rounded-lg text-center" style="background:rgba(201,148,0,0.04);">
+          <div class="font-bold mb-1" style="color:var(--gold);">🏰 查尔斯</div>
+          <div style="color:var(--dim);">灯塔策应支援</div>
+        </div>
+        <div class="p-3 rounded-lg text-center" style="background:rgba(102,51,170,0.04);">
+          <div class="font-bold mb-1" style="color:var(--purple);">☣️ 玛娜初体</div>
+          <div style="color:var(--dim);">内部配合瓦解</div>
+        </div>
+        <div class="p-3 rounded-lg text-center" style="background:rgba(204,51,51,0.04);">
+          <div class="font-bold mb-1" style="color:var(--red);">🌌 主宰</div>
+          <div style="color:var(--dim);">最终裁决者</div>
+        </div>
+      </div>
+      <div class="mt-3 text-xs p-2 rounded" style="background:rgba(0,102,204,0.06);">
+        <strong style="color:var(--cyan);">交织效应：</strong>五维首次完全交汇，每个角色的选择同时影响所有维度——这才是"攻腥计划"的真正形态
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ========== TAB 7: 终局推演 ========== -->
+<div id="ending" class="tab-panel">
+  <div class="text-center mb-8">
+    <h2 class="serif text-3xl font-bold mb-2" style="color:var(--cyan);">终局推演：三种可能路径</h2>
+    <p class="text-sm" style="color:var(--dim);">基于S2大结局彩蛋与全部伏笔的最优解 · 悲剧解 · 开放解</p>
+  </div>
+
+  <!-- 关键情报卡片 -->
+  <div class="glass p-5 mb-8" style="border-left:4px solid var(--red);">
+    <div class="font-bold mb-2 flex items-center gap-2" style="color:var(--red);">
+      <span>🔑</span> S2大结局关键情报汇总
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm" style="color:var(--dim);">
+      <div>• 白月魁"死亡"是攻腥计划的一环，身体飘向疑似"方舟"舱体</div>
+      <div>• 赖大师=19号实验体？"光影之主=赖大师"谐音梗</div>
+      <div>• 马克被目瘤深度绑定，成为玛娜生态的一部分</div>
+      <div>• 查尔斯杀光噬极兽，但克洛托异常活跃</div>
+      <div>• 冉冰复活：玛娜初体承诺可能是骗局，但生命源质理论可保存</div>
+      <div>• 攻腥计划核心：马克打入玛娜核心，从内部瓦解</div>
+    </div>
+  </div>
+
+  <!-- 修正说明 -->
+  <div class="glass p-5 mb-8" style="border-left:4px solid var(--purple);">
+    <div class="font-bold mb-3 flex items-center gap-2" style="color:var(--purple);">
+      <span>📝</span> 基于音乐层+二创的关键修正
+    </div>
+    <div class="overflow-x-auto">
+      <table class="text-sm w-full" style="color:var(--dim);">
+        <thead>
+          <tr style="border-bottom:1px solid var(--border);">
+            <th class="text-left py-2 pr-4" style="color:var(--text);">修正点</th>
+            <th class="text-left py-2 pr-4" style="color:var(--text);">原分析</th>
+            <th class="text-left py-2" style="color:var(--text);">修正后</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr style="border-bottom:1px solid var(--border);">
+            <td class="py-2 pr-4"><strong style="color:var(--text);">冉冰复活</strong></td>
+            <td class="py-2 pr-4">存疑，可能骗局</td>
+            <td class="py-2"><strong style="color:var(--green);">有音乐层支撑</strong>：《倒放的一生》"冥河"=生命源质保存；《颂赞》"灵魂化作焰火"=能量生命形态</td>
+          </tr>
+          <tr style="border-bottom:1px solid var(--border);">
+            <td class="py-2 pr-4"><strong style="color:var(--text);">时间循环</strong></td>
+            <td class="py-2 pr-4">未考虑</td>
+            <td class="py-2"><strong style="color:var(--green);">《倒放的一生》直接暗示</strong>：赖大师"经历过"而非"预知"</td>
+          </tr>
+          <tr style="border-bottom:1px solid var(--border);">
+            <td class="py-2 pr-4"><strong style="color:var(--text);">查尔斯终局</strong></td>
+            <td class="py-2 pr-4">废除三大法则</td>
+            <td class="py-2"><strong style="color:var(--green);">音乐层补充</strong>：《末日留守者》"留守者"=查尔斯是"最后的守墓人"而非逃离者</td>
+          </tr>
+          <tr style="border-bottom:1px solid var(--border);">
+            <td class="py-2 pr-4"><strong style="color:var(--text);">赖大师身份</strong></td>
+            <td class="py-2 pr-4">存疑</td>
+            <td class="py-2"><strong style="color:var(--green);">谐音梗+19号实验体</strong>=时间循环的"先知"</td>
+          </tr>
+          <tr>
+            <td class="py-2 pr-4"><strong style="color:var(--text);">主宰动机</strong></td>
+            <td class="py-2 pr-4">未明确</td>
+            <td class="py-2"><strong style="color:var(--green);">《长夜尽头》"欲望索求"</strong>=人类永生技术触发"清除程序"</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+    <!-- 最优解 -->
+    <div class="glass p-6" style="border-top:4px solid var(--green);">
+      <div class="text-center mb-4">
+        <div class="text-4xl mb-2">🌿</div>
+        <div class="font-bold text-xl" style="color:var(--green);">路径A · 共生和解</div>
+        <div class="text-xs mt-1" style="color:var(--dim);">概率：50% | 主题契合度：★★★★★</div>
+      </div>
+      <div class="text-sm space-y-2" style="color:var(--dim);">
+        <div>• 马克成为新"生态中枢"，拥有人类意识+玛娜能力</div>
+        <div>• 冉冰以能量生命形式在玛娜网络"复活"（但非原样）</div>
+        <div>• 白月魁"复活"但身体部分玛娜化，成为"新人类"</div>
+        <div>• 查尔斯废除三大法则，灯塔成为"旧时代博物馆"</div>
+        <div>• 主宰解除清除程序，转为"观察者"</div>
+        <div>• <strong style="color:var(--text);">终台词</strong>："万物并育而不相害"</div>
+      </div>
+      <div class="mt-4 p-3 rounded-lg text-xs" style="background:rgba(0,136,68,0.06);">
+        <strong style="color:var(--green);">优点：</strong>完美回扣龙骨村理念、冉冰情感线、马克成长弧<br>
+        <strong style="color:var(--red);">风险：</strong>过于圆满，可能削弱末日质感
+      </div>
+    </div>
+
+    <!-- 悲剧解 -->
+    <div class="glass p-6" style="border-top:4px solid var(--red);">
+      <div class="text-center mb-4">
+        <div class="text-4xl mb-2">💀</div>
+        <div class="font-bold text-xl" style="color:var(--red);">路径B · 牺牲轮回</div>
+        <div class="text-xs mt-1" style="color:var(--dim);">概率：30% | 主题契合度：★★★★☆</div>
+      </div>
+      <div class="text-sm space-y-2" style="color:var(--dim);">
+        <div>• 马克消灭玛娜初体，但自身也消散于生态网络</div>
+        <div>• 冉冰的意识永远困于玛娜网络，无法真正复活</div>
+        <div>• 白月魁的"复活"只是短暂回光，最终彻底死亡</div>
+        <div>• 查尔斯战死，临渊者成为灯塔最后的"神"</div>
+        <div>• 主宰启动新一轮清除，人类退回原始状态</div>
+        <div>• <strong style="color:var(--text);">终台词</strong>："即便身为蝼蚁，也曾仰望星空"</div>
+      </div>
+      <div class="mt-4 p-3 rounded-lg text-xs" style="background:rgba(204,51,51,0.06);">
+        <strong style="color:var(--green);">优点：</strong>史诗悲剧感，符合灵笼"末日"基调<br>
+        <strong style="color:var(--red);">风险：</strong>粉丝反弹，商业上不利续作
+      </div>
+    </div>
+
+    <!-- 开放解 -->
+    <div class="glass p-6" style="border-top:4px solid var(--purple);">
+      <div class="text-center mb-4">
+        <div class="text-4xl mb-2">🌌</div>
+        <div class="font-bold text-xl" style="color:var(--purple);">路径C · 星际开放</div>
+        <div class="text-xs mt-1" style="color:var(--dim);">概率：20% | 主题契合度：★★★★☆</div>
+      </div>
+      <div class="text-sm space-y-2" style="color:var(--dim);">
+        <div>• 马克与玛娜初体融合后，获得星际航行能力</div>
+        <div>• "方舟"太空站启动，人类开始星际移民</div>
+        <div>• 冉冰的意识成为"方舟"AI核心</div>
+        <div>• 白月魁留守地球，成为"新生态"的守护者</div>
+        <div>• 查尔斯带领灯塔成为"太空港"</div>
+        <div>• <strong style="color:var(--text);">终台词</strong>："囚笼之外，还有囚笼"</div>
+      </div>
+      <div class="mt-4 p-3 rounded-lg text-xs" style="background:rgba(102,51,170,0.06);">
+        <strong style="color:var(--green);">优点：</strong>为续作/电影留下空间，世界观扩展<br>
+        <strong style="color:var(--red);">风险：</strong>可能显得"挖坑不填"，缺乏 closure
+      </div>
+    </div>
+  </div>
+
+  <!-- 我的推荐 -->
+  <div class="glass p-8 text-center" style="border-color:var(--cyan);">
+    <div class="serif text-2xl font-bold mb-4" style="color:var(--cyan);">推荐方案：路径A+路径C的融合</div>
+    <p class="text-base leading-relaxed max-w-3xl mx-auto mb-6" style="color:var(--text);">
+      <strong>终章结构：三幕式</strong><br><br>
+      <strong>第一幕（S3E1-6）：裂变</strong>——五线并行推进，各自揭示真相。<br>
+      马克发现玛娜初体也是受害者，查尔斯发现光影之主是谎言（赖大师=19号=光影之主），白月魁"复活"后发现身体已非人类。<br><br>
+      <strong>第二幕（S3E7-12）：交汇</strong>——五线开始交织，角色立场反转。<br>
+      马克从"复仇者"变为"调解者"，查尔斯从"极权者"变为"弑神者"（摧毁光影会神殿），白月魁从"布局者"变为"局中人"。<br><br>
+      <strong>第三幕（S4终章）：共生</strong>——五线完全交汇，终局揭晓。<br>
+      马克成为新生态中枢（路径A），但同时启动"方舟"计划（路径C），<br>
+      留下"囚笼之外还有囚笼"的开放式结尾，既给 closure 又留空间。
+    </p>
+    <div class="flex justify-center gap-4 text-sm flex-wrap">
+      <div class="px-4 py-2 rounded-lg" style="background:rgba(0,136,68,0.06);border:1px solid var(--green);">
+        <span style="color:var(--green);">情感线</span> 冉冰"复活" ✓ 马克白月魁和解 ✓
+      </div>
+      <div class="px-4 py-2 rounded-lg" style="background:rgba(201,148,0,0.06);border:1px solid var(--gold);">
+        <span style="color:var(--gold);">权力线</span> 查尔斯救赎 ✓ 三大法则废除 ✓
+      </div>
+      <div class="px-4 py-2 rounded-lg" style="background:rgba(102,51,170,0.06);border:1px solid var(--purple);">
+        <span style="color:var(--purple);">哲学线</span> 共生理念 ✓ 囚笼隐喻 ✓
+      </div>
+      <div class="px-4 py-2 rounded-lg" style="background:rgba(102,51,170,0.06);border:1px solid var(--purple);">
+        <span style="color:var(--purple);">音乐线</span> 打破囚笼 ✓ 唯有爱 ✓ 留守者 ✓
+      </div>
+    </div>
+  </div>
+
+  <!-- 关键伏笔回收时间线 -->
+  <div class="glass p-6 mt-8">
+    <h3 class="font-bold text-lg mb-4 flex items-center gap-2" style="color:var(--cyan);">
+      <span>📅</span> 关键伏笔回收时间线预测
+    </h3>
+    <div class="space-y-4">
+      <div class="flex items-start gap-4">
+        <div class="w-20 text-xs font-bold pt-1" style="color:var(--cyan);">S3E1-3</div>
+        <div class="flex-1 p-3 rounded-lg text-sm" style="background:rgba(0,102,204,0.04);">
+          <strong>马克"黑化"启动：</strong>雨燕号坠毁，与玛娜初体深度融合。赖大师身份首次暗示（"丫头"称呼暴露年龄）。<br>
+          <strong>音乐回扣：</strong>《末日留守者》"方舟"回收暗示兑现
+        </div>
+      </div>
+      <div class="flex items-start gap-4">
+        <div class="w-20 text-xs font-bold pt-1" style="color:var(--gold);">S3E4-7</div>
+        <div class="flex-1 p-3 rounded-lg text-sm" style="background:rgba(201,148,0,0.04);">
+          <strong>光影之主真相：</strong>查尔斯发现光影之主=ASH残留意识=赖大师操控。冉冰"回响"出现，马克感知到其残留意识。<br>
+          <strong>音乐回扣：</strong>《倒放的一生》"冥河""祂们"含义揭示
+        </div>
+      </div>
+      <div class="flex items-start gap-4">
+        <div class="w-20 text-xs font-bold pt-1" style="color:var(--red);">S3E8-10</div>
+        <div class="flex-1 p-3 rounded-lg text-sm" style="background:rgba(204,51,51,0.04);">
+          <strong>白月魁"复活"：</strong>太空舱回收，意识从备份恢复，但身体部分玛娜化。马克"三链觉醒"，成为三界沟通者。<br>
+          <strong>音乐回扣：</strong>《长夜尽头》"长夜的尽头"攻腥目标兑现
+        </div>
+      </div>
+      <div class="flex items-start gap-4">
+        <div class="w-20 text-xs font-bold pt-1" style="color:var(--purple);">S4终章</div>
+        <div class="flex-1 p-3 rounded-lg text-sm" style="background:rgba(102,51,170,0.04);">
+          <strong>攻腥计划执行：</strong>五维完全交汇，马克成为新生态中枢。冉冰以能量生命形式"复活"。查尔斯废除三大法则。<br>
+          <strong>音乐回扣：</strong>《第一推动力》"打破囚笼"《颂赞》"唯有爱"全部兑现
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ========== TAB 8: 蝼蚁叙事层 ========== -->
+<div id="ants" class="tab-panel">
+  <div class="text-center mb-10">
+    <div class="flex justify-center mb-4">
+      <div class="wave-container">
+        <div class="wave-bar" style="animation-delay:0s; background:linear-gradient(to top, var(--red), var(--gold));"></div>
+        <div class="wave-bar" style="animation-delay:0.1s; background:linear-gradient(to top, var(--red), var(--gold));"></div>
+        <div class="wave-bar" style="animation-delay:0.2s; background:linear-gradient(to top, var(--red), var(--gold));"></div>
+        <div class="wave-bar" style="animation-delay:0.3s; background:linear-gradient(to top, var(--red), var(--gold));"></div>
+        <div class="wave-bar" style="animation-delay:0.4s; background:linear-gradient(to top, var(--red), var(--gold));"></div>
+        <div class="wave-bar" style="animation-delay:0.5s; background:linear-gradient(to top, var(--red), var(--gold));"></div>
+        <div class="wave-bar" style="animation-delay:0.6s; background:linear-gradient(to top, var(--red), var(--gold));"></div>
+        <div class="wave-bar" style="animation-delay:0.7s; background:linear-gradient(to top, var(--red), var(--gold));"></div>
+      </div>
+    </div>
+    <h2 class="serif text-3xl font-bold mb-2" style="color:var(--red);">🐜 蝼蚁叙事层</h2>
+    <p class="text-sm" style="color:var(--dim);">灵笼的叙事魅力恰恰在于"蝼蚁视角"——普通人的选择才是"囚徒困境"的真实体现</p>
+  </div>
+
+  <!-- 核心命题 -->
+  <div class="glass p-8 mb-10 text-center" style="border-color:var(--red);">
+    <div class="serif text-xl font-bold mb-4" style="color:var(--red);">核心命题：谁才是灵笼真正的主角？</div>
+    <p class="text-base leading-relaxed max-w-3xl mx-auto" style="color:var(--text);">
+      灵笼不是马克的个人英雄史诗，而是<strong style="color:var(--red);">一场关于"蝼蚁"的集体叙事</strong>。
+      4068/随影、4277、4079、尘民、猎荒者、龙骨村村民——这些"非主角"的选择，
+      才是"囚徒困境"最真实的体现：当生存成为唯一法则，道德与人性不过是可交易的筹码。
+      正如网友所言：<strong style="color:var(--red);">"或许只有我是尘民"</strong>。
+    </p>
+  </div>
+
+  <!-- 4068/随影：从尘民到"上民"的异化之路 -->
+  <div class="song-card mb-8" style="border-left:4px solid var(--red);">
+    <div class="p-6">
+      <div class="flex flex-wrap items-center gap-3 mb-4">
+        <span class="text-2xl">🎭</span>
+        <div class="flex-1">
+          <div class="font-bold text-lg" style="color:var(--red);">4068 → 随影：被体制异化的标本</div>
+          <div class="text-xs mt-1" style="color:var(--dim);">灯塔底层尘民 → 查尔斯棋子 → 猎荒者指挥官 → 可能的觉醒者</div>
+        </div>
+        <span class="text-xs px-3 py-1 rounded-full tag-unresolved">❌ 未完结</span>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          <div class="font-bold text-sm mb-3" style="color:var(--text);">命运轨迹</div>
+          <div class="text-sm space-y-2" style="color:var(--dim);">
+            <div>• <strong>起点</strong>：编号4068，灯塔底层尘民，基因标签禁锢一生</div>
+            <div>• <strong>第一次背叛</strong>：为救4277，在查尔斯胁迫下刺杀马克——"这一刀割裂了马克的喉咙，更将他自己钉在了道德十字架上"</div>
+            <div>• <strong>被驯化</strong>：查尔斯赐名"随影"，提拔为猎荒者指挥官——"用虚假的阶级跃升换取忠诚"</div>
+            <div>• <strong>彻底异化</strong>：撬开重立体爪钩致使马克坠落，灵魂在妥协中"碳化"</div>
+            <div>• <strong>S2转折</strong>：4079牺牲、4277怀孕暴露，可能触发良知觉醒</div>
+          </div>
+        </div>
+        <div>
+          <div class="font-bold text-sm mb-3" style="color:var(--text);">叙事功能</div>
+          <div class="text-sm space-y-2" style="color:var(--dim);">
+            <div>• <strong>阶级批判</strong>：4068的"逆袭"不是励志，而是被体制异化的标本——"上民身份始终带着镣铐"</div>
+            <div>• <strong>镜像对照</strong>：他的"黑点"都能在上民中找到镜像——红寇破晓不守规矩、阿福抛下恋人</div>
+            <div>• <strong>观众立场测试</strong>：弹幕"大快人心"vs"或许只有我是尘民"——暴露了观众自身的阶级立场</div>
+            <div>• <strong>终局预言</strong>：他可能不是洗白，而是成为"尘民反抗的领袖"——"要把一切上民对尘民做的孽返还"</div>
+          </div>
+          <div class="mt-3 p-2 rounded-lg" style="background:rgba(204,51,51,0.06);">
+            <strong style="color:var(--red);">核心主题：</strong>被体制异化的悲剧——用一生追逐的"上民"标签，最终成为禁锢灵魂的新枷锁
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4277 & 4079：尘民的三角关系 -->
+  <div class="song-card mb-8" style="border-left:4px solid var(--pink);">
+    <div class="p-6">
+      <div class="flex flex-wrap items-center gap-3 mb-4">
+        <span class="text-2xl">💔</span>
+        <div class="flex-1">
+          <div class="font-bold text-lg" style="color:var(--pink);">4277 & 4079：尘民的"爱与罚"</div>
+          <div class="text-xs mt-1" style="color:var(--dim);">灯塔最底层的情感线，却是最真实的人性</div>
+        </div>
+        <span class="text-xs px-3 py-1 rounded-full tag-pending">⚠ S2揭示中</span>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          <div class="font-bold text-sm mb-3" style="color:var(--text);">4277：被隐藏的怀孕与坠落之谜</div>
+          <div class="text-sm space-y-2" style="color:var(--dim);">
+            <div>• <strong>S1伏笔</strong>：4277"坠落"灯塔，4068表现过于淡定</div>
+            <div>• <strong>S2揭示</strong>：怀孕7个月，被4068自导自演藏在灯塔下层维修室</div>
+            <div>• <strong>生存逻辑</strong>：灯塔严禁尘民生育，违者或被处决——"直接挑战阶级秩序"</div>
+            <div>• <strong>情感转折</strong>：与4068争吵后关系破裂，4079成为感情寄托——"青青草原"疑云</div>
+            <div>• <strong>终局影响</strong>：若怀孕曝光，可能引发灯塔内乱，推动"生存堡垒"向"人性解放"过渡</div>
+          </div>
+        </div>
+        <div>
+          <div class="font-bold text-sm mb-3" style="color:var(--text);">4079：沉默的牺牲者</div>
+          <div class="text-sm space-y-2" style="color:var(--dim);">
+            <div>• <strong>角色定位</strong>：4068与4277之间的"暖男"，尘民中的"好人"</div>
+            <div>• <strong>S2牺牲</strong>：为救4277/传递物资，最终死亡——成为4068觉醒的催化剂</div>
+            <div>• <strong>叙事功能</strong>：他的死不是"剧情杀"，而是灯塔制度对"善良"的系统性清除</div>
+            <div>• <strong>情感核心</strong>：三人关系中，他是唯一没有"野心"的——却最先被牺牲</div>
+          </div>
+          <div class="mt-3 p-2 rounded-lg" style="background:rgba(204,51,102,0.06);">
+            <strong style="color:var(--pink);">核心主题：</strong>在末日中，和相爱的人厮守，是这么奢侈的事情
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 龙骨村村民：末日桃花源 -->
+  <div class="song-card mb-8" style="border-left:4px solid var(--green);">
+    <div class="p-6">
+      <div class="flex flex-wrap items-center gap-3 mb-4">
+        <span class="text-2xl">🌿</span>
+        <div class="flex-1">
+          <div class="font-bold text-lg" style="color:var(--green);">龙骨村村民：末日中的"人味"</div>
+          <div class="text-xs mt-1" style="color:var(--dim);">与灯塔的"生存主义"相对，龙骨村保留了最珍贵的东西——人性</div>
+        </div>
+        <span class="text-xs px-3 py-1 rounded-full tag-resolved">✅ S2已揭示</span>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="glass p-4" style="border-top:3px solid var(--green);">
+          <div class="font-bold text-sm mb-2" style="color:var(--green);">日常生活</div>
+          <div class="text-xs space-y-1" style="color:var(--dim);">
+            <div>• 萌娃踢"蹴鞠"（致敬少林足球）</div>
+            <div>• 觉行者山大搓麻将、被老婆暴打</div>
+            <div>• 山石灰打拳皇、母子接力rap</div>
+            <div>• <strong>核心</strong>：末日之下，人没有变成野兽</div>
+          </div>
+        </div>
+        <div class="glass p-4" style="border-top:3px solid var(--cyan);">
+          <div class="font-bold text-sm mb-2" style="color:var(--cyan);">觉行者群像</div>
+          <div class="text-xs space-y-1" style="color:var(--dim);">
+            <div>• <strong>阿沐尔</strong>：声波吼觉行者，狮子吼压制</div>
+            <div>• <strong>寡言</strong>：铜皮铁骨，硬抗子弹</div>
+            <div>• <strong>酒歌</strong>：治疗能力，亲吻额头修复细胞</div>
+            <div>• <strong>无门</strong>：量子隧穿，战场穿梭</div>
+          </div>
+        </div>
+        <div class="glass p-4" style="border-top:3px solid var(--gold);">
+          <div class="font-bold text-sm mb-2" style="color:var(--gold);">文化符号</div>
+          <div class="text-xs space-y-1" style="color:var(--dim);">
+            <div>• 蹴鞠=中国足球起源（战国临淄）</div>
+            <div>• 麻将=天地人三才、方位观念</div>
+            <div>• 说唱=中式嘻哈本土化</div>
+            <div>• <strong>核心</strong>：传统文化在末日中的延续</div>
+          </div>
+        </div>
+      </div>
+      <div class="mt-4 p-3 rounded-lg" style="background:rgba(0,136,68,0.06);">
+        <strong style="color:var(--green);">叙事功能：</strong>龙骨村不是"世外桃源"的简单对立，而是证明了——
+        <strong>人性一定要保留，哪怕在废土的环境中，人也不能变成野兽。</strong>
+        这是东方式的"人定胜天"：不接受恶劣环境，要一点点改造它，最终彻底翻转。
+      </div>
+    </div>
+  </div>
+
+  <!-- 尘民群像：被忽视的"大多数" -->
+  <div class="glass p-6 mb-8" style="border-left:4px solid var(--gold);">
+    <div class="font-bold text-lg mb-4 flex items-center gap-2" style="color:var(--gold);">
+      <span>👥</span> 尘民群像：被忽视的"大多数"
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div>
+        <div class="font-bold text-sm mb-2" style="color:var(--text);">S1中的"变脸"</div>
+        <div class="text-sm space-y-1" style="color:var(--dim);">
+          <div>• 马克归来时：尘民欢呼追捧，视其为英雄</div>
+          <div>• 马克受伤抢救时：开始抱怨，担心承诺落空</div>
+          <div>• 马克兽化时：群起而攻之，认为他该死</div>
+          <div>• <strong>核心</strong>："原来从始至终，尘民关注的都只是自己"</div>
+        </div>
+      </div>
+      <div>
+        <div class="font-bold text-sm mb-2" style="color:var(--text);">叙事批判</div>
+        <div class="text-sm space-y-1" style="color:var(--dim);">
+          <div>• 这不是"忘恩负义"，而是<strong>生存本能压倒道德</strong></div>
+          <div>• 尘民没有医疗资源、没有食物、没有人权——"吃着虫饼，过着猪狗一样的生活"</div>
+          <div>• 他们的"自私"是灯塔制度<strong>系统性压迫</strong>的结果</div>
+          <div>• <strong>核心</strong>：英雄只存在于能给大家带来利益的那一刻</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 蝼蚁叙事层总结 -->
+  <div class="glass p-8 text-center" style="border:2px solid var(--red);">
+    <div class="text-4xl mb-3">🐜</div>
+    <div class="serif text-xl font-bold mb-4" style="color:var(--red);">蝼蚁叙事层核心结论</div>
+    <p class="text-base leading-relaxed max-w-3xl mx-auto" style="color:var(--text);">
+      灵笼的伟大之处，不在于马克有多强，而在于它让<strong style="color:var(--red);">每一个"蝼蚁"都有了自己的故事</strong>。<br>
+      4068的背叛不是"坏"，而是体制压迫下的<strong>生存策略</strong>；<br>
+      4277的怀孕不是"私情"，而是对<strong>三大法则的终极挑战</strong>；<br>
+      4079的牺牲不是"剧情杀"，而是<strong>善良在末日中的必然命运</strong>；<br>
+      龙骨村村民的快乐不是"天真"，而是<strong>人性在废墟上的最后堡垒</strong>。<br><br>
+      忽略蝼蚁叙事层=丢失了灵笼<strong style="color:var(--red);">50%的灵魂</strong>。
+    </p>
+  </div>
+</div>
+
+<!-- ========== TAB 9: 主宰的东方哲学重解 ========== -->
+<div id="dao" class="tab-panel">
+  <div class="text-center mb-10">
+    <div class="flex justify-center mb-4">
+      <div class="wave-container">
+        <div class="wave-bar" style="animation-delay:0s; background:linear-gradient(to top, var(--purple), var(--cyan));"></div>
+        <div class="wave-bar" style="animation-delay:0.1s; background:linear-gradient(to top, var(--purple), var(--cyan));"></div>
+        <div class="wave-bar" style="animation-delay:0.2s; background:linear-gradient(to top, var(--purple), var(--cyan));"></div>
+        <div class="wave-bar" style="animation-delay:0.3s; background:linear-gradient(to top, var(--purple), var(--cyan));"></div>
+        <div class="wave-bar" style="animation-delay:0.4s; background:linear-gradient(to top, var(--purple), var(--cyan));"></div>
+        <div class="wave-bar" style="animation-delay:0.5s; background:linear-gradient(to top, var(--purple), var(--cyan));"></div>
+        <div class="wave-bar" style="animation-delay:0.6s; background:linear-gradient(to top, var(--purple), var(--cyan));"></div>
+        <div class="wave-bar" style="animation-delay:0.7s; background:linear-gradient(to top, var(--purple), var(--cyan));"></div>
+      </div>
+    </div>
+    <h2 class="serif text-3xl font-bold mb-2" style="color:var(--purple);">☯️ 主宰的东方哲学重解</h2>
+    <p class="text-sm" style="color:var(--dim);">从"宇宙免疫系统"的西方科幻框架，回归道家"天道"、佛家"轮回"、儒家"天命"的东方哲学</p>
+  </div>
+
+  <!-- 核心修正 -->
+  <div class="glass p-8 mb-10 text-center" style="border-color:var(--purple);">
+    <div class="serif text-xl font-bold mb-4" style="color:var(--purple);">核心修正：主宰不是"免疫系统"，而是"道"的化身</div>
+    <p class="text-base leading-relaxed max-w-3xl mx-auto" style="color:var(--text);">
+      之前的分析将主宰简化为"宇宙免疫系统"——这太<strong style="color:var(--red);">西方科幻</strong>了。<br>
+      灵笼的底层是<strong style="color:var(--purple);">东方哲学</strong>：主宰不是"恶意的外敌"，而是"天道"的自发运行。<br>
+      它不是要"清除"人类，而是要<strong>纠正人类对"自然"的偏离</strong>——
+      正如老子所言：<strong style="color:var(--purple);">"天地不仁，以万物为刍狗"</strong>。
+    </p>
+  </div>
+
+  <!-- 三重哲学维度 -->
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-5 mb-10">
+
+    <!-- 道家：天道无为 -->
+    <div class="glass p-5" style="border-top:4px solid var(--cyan);">
+      <div class="text-center mb-4">
+        <div class="text-3xl mb-2">☯️</div>
+        <div class="font-bold text-lg" style="color:var(--cyan);">道家 · 天道无为</div>
+        <div class="text-xs mt-1" style="color:var(--dim);">"生而不有，为而不恃，长而不宰"</div>
+      </div>
+      <div class="text-sm space-y-2" style="color:var(--dim);">
+        <div>• <strong>"天地不仁"</strong>：主宰没有善恶，只是"道"的自然运行——"夫莫之命而常自然"</div>
+        <div>• <strong>"长而不宰"</strong>：道生养万物而不控制主宰——主宰创造了玛娜生态，却不直接干预</div>
+        <div>• <strong>"反者道之动"</strong>：人类追求永生（过度），自然引发反噬（玛娜生态）</div>
+        <div>• <strong>"道法自然"</strong>：玛娜生态不是"惩罚"，而是自然规律的自我修正</div>
+        <div>• <strong>灵笼对应</strong>：主宰="道"，玛娜初体="德"（道的具体作用），噬极兽="万物"（被生养者）</div>
+      </div>
+      <div class="mt-3 p-2 rounded-lg text-xs" style="background:rgba(0,102,204,0.06);">
+        <strong style="color:var(--cyan);">关键洞察：</strong>主宰的"清除程序"不是恶意，而是<strong>"无为而无不为"</strong>——
+        它不主动攻击人类，只是让人类自食其果。
+      </div>
+    </div>
+
+    <!-- 佛家：轮回因果 -->
+    <div class="glass p-5" style="border-top:4px solid var(--purple);">
+      <div class="text-center mb-4">
+        <div class="text-3xl mb-2">🪷</div>
+        <div class="font-bold text-lg" style="color:var(--purple);">佛家 · 轮回因果</div>
+        <div class="text-xs mt-1" style="color:var(--dim);">"生命源质=神识，轮回转世=生态循环"</div>
+      </div>
+      <div class="text-sm space-y-2" style="color:var(--dim);">
+        <div>• <strong>"生命源质"=神识</strong>：佛家认为肉体毁坏但精神不灭——灵笼中生命源质被抽取后并未消散</div>
+        <div>• <strong>"玛娜之花"=轮回枢纽</strong>：吸收生命源质、孕育噬极兽=六道轮回的"中转站"</div>
+        <div>• <strong>"因果报应"</strong>：人类追求永生（因）→ 玛娜生态反噬（果）</div>
+        <div>• <strong>"众生平等"</strong>：玛娜生态中，人类与噬极兽都是"众生"——没有高下之分</div>
+        <div>• <strong>"涅槃"=共生</strong>：马克的终极形态不是"战胜"，而是"超脱轮回"——与生态融为一体</div>
+      </div>
+      <div class="mt-3 p-2 rounded-lg text-xs" style="background:rgba(102,51,170,0.06);">
+        <strong style="color:var(--purple);">关键洞察：</strong>冉冰的"复活"不是科幻，而是<strong>"转世"</strong>——
+        她的生命源质（神识）在玛娜网络中找到了新的"容器"。
+      </div>
+    </div>
+
+    <!-- 儒家：天命与人道 -->
+    <div class="glass p-5" style="border-top:4px solid var(--gold);">
+      <div class="text-center mb-4">
+        <div class="text-3xl mb-2">📜</div>
+        <div class="font-bold text-lg" style="color:var(--gold);">儒家 · 天命与人道</div>
+        <div class="text-xs mt-1" style="color:var(--dim);">"天人感应，天命靡常"</div>
+      </div>
+      <div class="text-sm space-y-2" style="color:var(--dim);">
+        <div>• <strong>"天命靡常"</strong>：主宰的"清除程序"不是永恒不变——"唯德是辅"</div>
+        <div>• <strong>"天人感应"</strong>：人类的行为（人道）影响天道的运行——攻腥计划="以德配天"</div>
+        <div>• <strong>"制天命而用之"</strong>：荀子的人定胜天——龙骨村的理念</div>
+        <div>• <strong>"仁民爱物"</strong>：马克的"共生"方案=儒家的"万物并育而不相害"</div>
+        <div>• <strong>"修身齐家治国平天下"</strong>：从个人（马克）到生态（天下）的层层扩展</div>
+      </div>
+      <div class="mt-3 p-2 rounded-lg text-xs" style="background:rgba(201,148,0,0.06);">
+        <strong style="color:var(--gold);">关键洞察：</strong>主宰最终说<strong>"你们证明了，值得被观察"</strong>——
+        这是"天命"的转移：从"清除"到"认可"。
+      </div>
+    </div>
+  </div>
+
+  <!-- 主宰的三重身份 -->
+  <div class="glass p-6 mb-8" style="border-left:4px solid var(--purple);">
+    <div class="font-bold text-lg mb-4 flex items-center gap-2" style="color:var(--purple);">
+      <span>🔮</span> 主宰的三重身份（东方哲学版）
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div class="p-4 rounded-xl" style="background:rgba(0,102,204,0.04);">
+        <div class="font-bold text-sm mb-2" style="color:var(--cyan);">第一层：道（本体）</div>
+        <div class="text-sm" style="color:var(--dim);">
+          主宰=宇宙的终极规律，无声无形，"生万物而不有"。它不是"谁"，而是"什么"——
+          一种自发的、无目的的、永恒的运行。
+        </div>
+      </div>
+      <div class="p-4 rounded-xl" style="background:rgba(102,51,170,0.04);">
+        <div class="font-bold text-sm mb-2" style="color:var(--purple);">第二层：德（作用）</div>
+        <div class="text-sm" style="color:var(--dim);">
+          玛娜初体="德"，是道在人类世界的具体体现。它"畜养"万物（噬极兽），
+          却不"主宰"——正如玛娜初体也是受害者，被囚禁于地幔藤。
+        </div>
+      </div>
+      <div class="p-4 rounded-xl" style="background:rgba(201,148,0,0.04);">
+        <div class="font-bold text-sm mb-2" style="color:var(--gold);">第三层：器（现象）</div>
+        <div class="text-sm" style="color:var(--dim);">
+          噬极兽、玛娜之花、腥漩="器"，是道-德运行的可见现象。
+          它们不是"敌人"，而是"自然"的一部分——正如洪水、地震不是恶意。
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 东西方对比 -->
+  <div class="glass p-6 mb-8" style="border-left:4px solid var(--red);">
+    <div class="font-bold text-lg mb-4 flex items-center gap-2" style="color:var(--red);">
+      <span>⚖️</span> 东西方叙事对比：为什么"免疫系统"是错的？
+    </div>
+    <div class="overflow-x-auto">
+      <table class="text-sm w-full" style="color:var(--dim);">
+        <thead>
+          <tr style="border-bottom:2px solid var(--border);">
+            <th class="text-left py-2 pr-4" style="color:var(--text);">维度</th>
+            <th class="text-left py-2 pr-4" style="color:var(--text);">西方科幻框架（免疫系统）</th>
+            <th class="text-left py-2" style="color:var(--text);">东方哲学框架（天道）</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr style="border-bottom:1px solid var(--border);">
+            <td class="py-2 pr-4"><strong style="color:var(--text);">主宰的动机</strong></td>
+            <td class="py-2 pr-4">"清除异常"=有目的、有判断</td>
+            <td class="py-2">"无为而治"=无目的、无判断</td>
+          </tr>
+          <tr style="border-bottom:1px solid var(--border);">
+            <td class="py-2 pr-4"><strong style="color:var(--text);">玛娜生态</strong></td>
+            <td class="py-2 pr-4">"病毒/白细胞"=敌对系统</td>
+            <td class="py-2">"自然调节"=自我修正</td>
+          </tr>
+          <tr style="border-bottom:1px solid var(--border);">
+            <td class="py-2 pr-4"><strong style="color:var(--text);">人类的位置</strong></td>
+            <td class="py-2 pr-4">"被清除的病原体"=受害者</td>
+            <td class="py-2">"偏离道的存在"=需自我修正</td>
+          </tr>
+          <tr style="border-bottom:1px solid var(--border);">
+            <td class="py-2 pr-4"><strong style="color:var(--text);">破局方式</strong></td>
+            <td class="py-2 pr-4">"战胜/消灭"=对抗</td>
+            <td class="py-2">"顺应/共生"=和解</td>
+          </tr>
+          <tr>
+            <td class="py-2 pr-4"><strong style="color:var(--text);">终局意义</strong></td>
+            <td class="py-2 pr-4">"幸存者胜利"=二元对立</td>
+            <td class="py-2">"万物并育"=天人合一</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="mt-4 p-3 rounded-lg text-xs" style="background:rgba(204,51,51,0.06);">
+      <strong style="color:var(--red);">核心批判：</strong>"免疫系统"隐喻预设了<strong>二元对立</strong>（人类vs主宰），
+      但灵笼的终极命题是<strong>打破对立</strong>——不是"战胜"主宰，而是"理解"天道。
+    </div>
+  </div>
+
+  <!-- 音乐叙事层的东方哲学回扣 -->
+  <div class="glass p-6 mb-8" style="border-left:4px solid var(--green);">
+    <div class="font-bold text-lg mb-4 flex items-center gap-2" style="color:var(--green);">
+      <span>🎵</span> 音乐叙事层的东方哲学回扣
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div class="p-4 rounded-xl" style="background:rgba(0,136,68,0.04);">
+        <div class="font-bold text-sm mb-2" style="color:var(--green);">《末日留守者》"刍狗"</div>
+        <div class="text-sm" style="color:var(--dim);">
+          "留下了几条刍狗"=直接引用老子"天地不仁，以万物为刍狗"。
+          马克克隆体=被道"生"而不被"宰"的存在——道的"无为"体现。
+        </div>
+      </div>
+      <div class="p-4 rounded-xl" style="background:rgba(102,51,170,0.04);">
+        <div class="font-bold text-sm mb-2" style="color:var(--purple);">《倒放的一生》"冥河"</div>
+        <div class="text-sm" style="color:var(--dim);">
+          "冥河"=佛家"三途河"，生命源质流动=轮回转世。
+          "倒放"=因果循环，"冲破神的维度"=超脱轮回。
+        </div>
+      </div>
+      <div class="p-4 rounded-xl" style="background:rgba(0,102,204,0.04);">
+        <div class="font-bold text-sm mb-2" style="color:var(--cyan);">《长夜尽头》"欲望索求"</div>
+        <div class="text-sm" style="color:var(--dim);">
+          "欲望持续生长"=人类偏离"道"的自然状态。
+          "生命之花凋谢"="物极必反"，过度追求导致毁灭。
+        </div>
+      </div>
+      <div class="p-4 rounded-xl" style="background:rgba(201,148,0,0.04);">
+        <div class="font-bold text-sm mb-2" style="color:var(--gold);">《第一推动力》"宿命主宰"</div>
+        <div class="text-sm" style="color:var(--dim);">
+          "宿命主宰"=儒家"天命"，但"无声抗宿命"="制天命而用之"。
+          "打破囚笼"=从"受命"到"造命"的儒家升华。
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 终局推演修正 -->
+  <div class="glass p-8 text-center" style="border-color:var(--purple);">
+    <div class="serif text-2xl font-bold mb-4" style="color:var(--purple);">终局推演修正：从"战胜"到"悟道"</div>
+    <p class="text-base leading-relaxed max-w-3xl mx-auto mb-6" style="color:var(--text);">
+      <strong>原推演（西方框架）：</strong>马克"战胜"主宰，证明共生优于清除。<br><br>
+      <strong>修正后（东方框架）：</strong>马克"理解"天道，让人类回归"自然"状态。<br>
+      不是"战胜"，而是<strong>"顺应"</strong>；不是"证明"，而是<strong>"悟道"</strong>。<br>
+      主宰的离去不是"被打败"，而是<strong>"无需再干预"</strong>——
+      因为人类已经学会了<strong style="color:var(--purple);">"生而不有，为而不恃，长而不宰"</strong>。
+    </p>
+    <div class="flex justify-center gap-4 text-sm flex-wrap">
+      <div class="px-4 py-2 rounded-lg" style="background:rgba(0,102,204,0.06);border:1px solid var(--cyan);">
+        <span style="color:var(--cyan);">道家</span> 无为而治 ✓ 道法自然 ✓
+      </div>
+      <div class="px-4 py-2 rounded-lg" style="background:rgba(102,51,170,0.06);border:1px solid var(--purple);">
+        <span style="color:var(--purple);">佛家</span> 轮回超脱 ✓ 因果共生 ✓
+      </div>
+      <div class="px-4 py-2 rounded-lg" style="background:rgba(201,148,0,0.06);border:1px solid var(--gold);">
+        <span style="color:var(--gold);">儒家</span> 天命靡常 ✓ 万物并育 ✓
+      </div>
+    </div>
+  </div>
+</div>
+</main>
+
+<footer class="relative z-10 py-10 text-center text-xs" style="color:var(--dim);">
+  <p class="serif text-base mb-2" style="color:var(--cyan);">灵笼 · 终极伏笔圆环推演系统</p>
+  <p>基于S1-S2全部25项伏笔的系统化回收方案 | 五维并行叙事架构 | 音乐叙事层 | 二创洞察</p>
+  <p class="mt-1">"即便身为蝼蚁，也有追寻真相的权利"</p>
+</footer>
+
+<script>
+function switchTab(tabId) {
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById(tabId).classList.add('active');
+  event.target.classList.add('active');
+}
+
+function filterResolve(type) {
+  const items = document.querySelectorAll('.resolve-item');
+  items.forEach(item => {
+    if (type === 'all') item.style.display = 'block';
+    else if (item.classList.contains(type)) item.style.display = 'block';
+    else item.style.display = 'none';
+  });
+}
+
+// 粒子系统
+function createParticles() {
+  const container = document.getElementById('particles');
+  const types = ['p-blue','p-green','p-purple','p-red','p-gold'];
+  const weights = [0.35,0.25,0.2,0.1,0.1];
+
+  for (let i = 0; i < 50; i++) {
+    const p = document.createElement('div');
+    const r = Math.random();
+    let idx = 0, cum = 0;
+    for (let j = 0; j < weights.length; j++) {
+      cum += weights[j];
+      if (r < cum) { idx = j; break; }
+    }
+    p.className = 'particle ' + types[idx];
+    p.style.left = Math.random() * 100 + '%';
+    p.style.top = Math.random() * 100 + '%';
+
+    const dx = (Math.random()-0.5)*250;
+    const dy = (Math.random()-0.5)*250;
+    p.style.setProperty('--dx1', dx*0.15+'px');
+    p.style.setProperty('--dy1', dy*0.15+'px');
+    p.style.setProperty('--dx2', dx*0.4+'px');
+    p.style.setProperty('--dy2', dy*0.4+'px');
+    p.style.setProperty('--dx3', dx*0.7+'px');
+    p.style.setProperty('--dy3', dy*0.7+'px');
+    p.style.setProperty('--dx4', dx+'px');
+    p.style.setProperty('--dy4', dy+'px');
+
+    p.style.animationDuration = (10+Math.random()*14) + 's';
+    p.style.animationDelay = (Math.random()*-18) + 's';
+    container.appendChild(p);
+  }
+}
+createParticles();
+
+// 3D鼠标跟随
+document.addEventListener('mousemove', (e) => {
+  const x = (e.clientX/window.innerWidth-0.5)*12;
+  const y = (e.clientY/window.innerHeight-0.5)*12;
+  document.querySelectorAll('.preserve-3d').forEach(el => {
+    if (!el.closest('.flip-card')) {
+      el.style.transform = `rotateY(${x}deg) rotateX(${-y}deg)`;
+    }
+  });
+});
+</script>
+</body>
+</html>
